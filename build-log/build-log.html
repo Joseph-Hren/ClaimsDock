@@ -18,7 +18,7 @@
       <span>Role: <b>Product direction, spec authorship, review</b></span>
       <span>Build: <b>Claude Code</b></span>
       <span>Stack: <b>Next.js, TypeScript, Anthropic API (tool-use + RAG)</b></span>
-      <span>Status: <b>Planning &amp; architecture complete — no application code yet</b></span>
+      <span>Status: <b>Claims schema &amp; seed data complete — Phase 1 of 11</b></span>
     </div>
   </div>
   </div>
@@ -72,12 +72,15 @@
           </div>
         </li>
 
-        <li class="session session--planned">
+        <li class="session session--done">
           <div class="session-rail"><div class="session-node"></div></div>
           <div class="session-body col">
-            <div class="session-head"><h3>Claims schema &amp; seed generator</h3><span class="pill pill--planned">Planned</span></div>
-            <p class="session-summary">lib/claims/</p>
-            <p>The 20-claim test set across CMS-1500 and UB-04 structures, box-number field names, ISO-week-seeded relative submission dates.</p>
+            <div class="session-head"><h3>Claims schema &amp; seed generator</h3><span class="pill pill--done">Done</span></div>
+            <p class="session-summary">src/lib/claims/ · scripts/validate-claims.ts</p>
+            <p>Repo scaffolded (Next.js 16, TypeScript, App Router) and pushed to GitHub. On top of it: a full claim schema (<code>types.ts</code>) with genuinely separate CMS-1500 and UB-04 shapes, field names mirroring the real box numbers rather than generic ones, and 20 authored claim records covering all 15 scenarios from the spec's test-set design — exactly 4 clean, 3 ambiguous, 3 missing-data, 3 complex-coverage-math, and 7 fraudulent, including the linked professional/facility pairs and the documentation-mismatch pattern that only shows up by comparing two linked claims against each other.</p>
+            <p>Content was authored for domain plausibility, not just schema conformance: age- and sex-appropriate procedures, diagnosis/procedure pairings that read as a real encounter rather than a random field-filler, and a shared provider identity reused across three of the fraud claims to produce the volume-spike pattern — which needed its own small dataset (<code>provider-history.json</code>) stating a trailing 6-month average against a current-month count, since "3.2x this provider's average" isn't something a single claim can carry on its own.</p>
+            <p>Only <code>submitted_date</code> is generated rather than authored, per the spec's own instruction — a small seeded PRNG (mulberry32) keyed to the current ISO week produces a deterministic-but-varied spread of claim ages (fresh, mid, near-deadline, one deliberately past its SLA deadline) that regenerates consistently within a week and shifts the next, with no reset step required.</p>
+            <p>A validation script checks the set for internal consistency — reciprocal linked-claim pairs, valid enum values, line-item totals that actually sum to the stated charge, and the exact scenario distribution the spec calls for — deliberately scenario-aware, so a claim's own <code>_testMeta.deliberately_missing_field</code> tag exempts its one intentional gap from being flagged, without silencing checks anywhere else. One real type-safety catch along the way: an exhaustive form-type check's defensive fallback branch was quietly unreachable as far as TypeScript's own narrowing was concerned (<code>never</code>), which is correct given today's two form types — cast rather than suppressed, so it stays a real guard if a third form type is ever added.</p>
           </div>
         </li>
 
@@ -213,7 +216,7 @@
         <thead><tr><th>Phase</th><th>State</th></tr></thead>
         <tbody>
           <tr><td>Architecture &amp; build-process planning</td><td>Done — spec finalized, CLAUDE.md written</td></tr>
-          <tr><td>Claims schema &amp; seed generator</td><td>Not started</td></tr>
+          <tr><td>Claims schema &amp; seed generator</td><td>Done — 20 claims, 15 scenarios, seeded date generator, validated</td></tr>
           <tr><td>RAG corpora</td><td>Not started</td></tr>
           <tr><td>Deterministic calculation layer</td><td>Not started</td></tr>
           <tr><td>RAG retrieval layer</td><td>Not started</td></tr>

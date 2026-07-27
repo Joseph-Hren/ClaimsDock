@@ -1,0 +1,25 @@
+{
+  "providers": [
+    {
+      "provider_npi": "1922334455",
+      "provider_name": "Meridian Pain & Wellness Center",
+      "trailing_6mo_avg_monthly_claims": 4,
+      "current_month_claims": 13,
+      "note": "3.25x its trailing 6-month average — the FinCEN-documented volume-spike red flag. Bills FRD-PHANTOM-01, FRD-UNBUNDLE-01, and FRD-DOUBLEBILL-01 in this seed set; the other ~10 current-month claims implied by this count are not materialized as individual records (this is aggregate ground truth for the Pipeline to cite, not a claims history to browse)."
+    },
+    {
+      "provider_npi": "1720456391",
+      "provider_name": "Cascade Physical Therapy",
+      "trailing_6mo_avg_monthly_claims": 22,
+      "current_month_claims": 24,
+      "note": "Normal, unremarkable volume — included for contrast so 'is this provider's volume normal' has more than one data point to compare against."
+    },
+    {
+      "provider_npi": "1855023467",
+      "provider_name": "Northgate Emergency Medical Center",
+      "trailing_6mo_avg_monthly_claims": 340,
+      "current_month_claims": 355,
+      "note": "High-volume ER facility, normal variance — a large absolute claim count is not itself a red flag without a baseline to compare against, which is the point of this dataset existing."
+    }
+  ]
+}

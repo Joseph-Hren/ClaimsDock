@@ -1,13 +1,25 @@
 @charset "UTF-8";
 
-/* No @font-face block here on purpose: this project doesn't have the
-   Brandon/Montserrat font files (AUGUR/VDBP's builds did, ClaimsDock's
-   don't yet, and may never use these specific faces once real UI type
-   choices land). Each font-family rule below already lists a system
-   fallback ('Helvetica Neue', sans-serif etc.) — omitting @font-face
-   just means those fall through to the fallback immediately, so this
-   still reads as the same family of build-log documents without a
-   broken font reference. */
+@font-face {
+  font-family: 'Brandon Bold';
+  src: url('assets/fonts/brandon_bld-webfont.woff2') format('woff2');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: 'Brandon Medium';
+  src: url('assets/fonts/brandon_med-webfont.woff2') format('woff2');
+  font-weight: normal; font-style: normal;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url('assets/fonts/montserrat-regular-webfont.woff2') format('woff2');
+  font-weight: 400; font-style: normal;
+}
+@font-face {
+  font-family: 'Montserrat';
+  src: url('assets/fonts/montserrat-medium-webfont.woff2') format('woff2');
+  font-weight: 500; font-style: normal;
+}
 
 :root {
   /* same base palette as the AUGUR/VDBP build logs, so this reads as one family of documents */
@@ -153,6 +165,20 @@ code, .code {
 .status-table td { padding: 11px 12px 11px 0; border-bottom: 1px solid var(--rule); vertical-align: top; }
 .status-table tr:last-child td { border-bottom: none; }
 
+/* Masthead progress rail — at-a-glance phase progress, full detail stays in the timeline below */
+.progress-rail { display: flex; align-items: center; margin: 22px 0 8px; }
+.progress-node-wrap { display: flex; align-items: center; }
+.progress-node {
+  width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Montserrat', sans-serif; font-size: 0.72rem; font-weight: 500;
+  border: 2px solid var(--rule-strong); background: var(--bg-raised); color: var(--muted);
+}
+.progress-node--done { border-color: var(--teal); background: var(--teal-tint); color: var(--teal); }
+.progress-line { width: 18px; height: 2px; background: var(--rule-strong); flex-shrink: 0; }
+.progress-line--done { background: var(--teal); }
+.progress-caption { font-family: 'Montserrat', sans-serif; font-size: 0.78rem; color: var(--muted); margin: 0; }
+
 footer { padding: 36px 0 60px; }
 footer p { font-family: 'Montserrat', sans-serif; font-size: 0.78rem; color: var(--muted); margin: 0 0 6px; }
 
@@ -162,4 +188,6 @@ footer p { font-family: 'Montserrat', sans-serif; font-size: 0.78rem; color: var
   .exhibit-pair { grid-template-columns: 1fr; }
   .col { max-width: calc(100% - 40px); margin-left: 40px; }
   .session-rail { width: 28px; }
+  .progress-rail { flex-wrap: wrap; row-gap: 8px; }
+  .progress-line { width: 10px; }
 }

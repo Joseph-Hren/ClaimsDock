@@ -20,6 +20,20 @@
       <span>Stack: <b>Next.js, TypeScript, Anthropic API (tool-use + RAG)</b></span>
       <span>Status: <b>RAG corpora complete — Phase 2 of 11</b></span>
     </div>
+    <div class="progress-rail" aria-hidden="true">
+      <div class="progress-node-wrap"><div class="progress-node progress-node--done">1</div><div class="progress-line progress-line--done"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node progress-node--done">2</div><div class="progress-line"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node">3</div><div class="progress-line"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node">4</div><div class="progress-line"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node">5</div><div class="progress-line"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node">6</div><div class="progress-line"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node">7</div><div class="progress-line"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node">8</div><div class="progress-line"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node">9</div><div class="progress-line"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node progress-node--done">10</div><div class="progress-line"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node">11</div></div>
+    </div>
+    <p class="progress-caption">3 of 11 phases done — Phase 10 (workflow visualization) was built out of order on purpose, not gated on the others.</p>
   </div>
   </div>
 </header>
@@ -157,12 +171,14 @@
           </div>
         </li>
 
-        <li class="session session--planned">
+        <li class="session session--done">
           <div class="session-rail"><div class="session-node"></div></div>
           <div class="session-body col">
-            <div class="session-head"><h3>Workflow visualization</h3><span class="pill pill--planned">Planned</span></div>
-            <p class="session-summary">standalone Artifact</p>
-            <p>A D3-based diagram of the full system — pipeline, router, human gate, confidence/severity/status logic, category taxonomies. Not gated on any other phase; can land any time in parallel.</p>
+            <div class="session-head"><h3>Workflow visualization</h3><span class="pill pill--done">Done</span></div>
+            <p class="session-summary">standalone Artifact — built out of numeric order, on purpose</p>
+            <p>An interactive, draggable, zoomable D3 diagram of the full system — the evaluation pipeline (both model calls plus the deterministic layer), the five category branches and their distinct recommendation logic, the human gate, the interactive router's four tools, Anchor's RAG retrieval path, and the confidence/severity/status taxonomies as a separate reference cluster rather than a competing category. One big overview plus three camera-preset detail views (Pipeline+Human Gate, Router+Anchor, Taxonomies) sharing the same underlying node set, so dragging a node in one view carries into the others.</p>
+            <p>Colors reuse the build-log's own ink/teal/coral neutrals for continuity, but the three subsystem colors are a categorical triple run through an actual colorblind-safety validator rather than hand-picked — custom near-teal/near-coral variants kept failing that check, so the validated default was used instead of forcing it. Two real interaction bugs surfaced and got fixed after review: a text-overflow bug traced to a CSS <code>text-transform</code>/letter-spacing pair that the wrap-measurement code wasn't accounting for, and a click-required-twice bug that turned out to be d3's pan-to-zoom and each node's own drag behavior both reacting to the same mousedown — fixed by excluding node-originating gestures from the canvas-pan behavior entirely, not by tuning a distance threshold (the first attempt at a fix, which didn't address the actual race).</p>
+            <p>Also the subject of a real sourcing correction: initial category-node copy over-attributed the five billing-fraud category names to a single FinCEN advisory. Corrected after independently fetching the advisory directly — see the RAG-corpora session below for the full account.</p>
           </div>
         </li>
 
@@ -226,7 +242,7 @@
           <tr><td>Human gate &amp; persistence</td><td>Not started</td></tr>
           <tr><td>Placeholder UI</td><td>Not started</td></tr>
           <tr><td>Real UI</td><td>Not started — blocked on Figma design, in progress separately</td></tr>
-          <tr><td>Workflow visualization</td><td>Not started</td></tr>
+          <tr><td>Workflow visualization</td><td>Done — built out of order, in parallel, as designed</td></tr>
           <tr><td>100+ claim scale-up</td><td>Not started — deferred by design</td></tr>
         </tbody>
       </table>

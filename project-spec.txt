@@ -2,7 +2,7 @@ Claims copilot spec · MDClaimsDock — Project Spec
 
 Living document. Update as decisions get made or revised.
 
-Status: Architecture defined. Naming locked: platform = ClaimsDock, embedded assistant panel = Anchor. Pipeline API-call structure, persistence model, and RAG mechanism decided (see inline implementation notes below, added 2026-07-26). Companion CLAUDE.md build-process document created alongside this spec. Next: corpora authoring, claims seed data generation.
+Status: Architecture defined. Naming locked: platform = ClaimsDock, embedded assistant panel = Anchor. Pipeline API-call structure, persistence model, and RAG mechanism decided (see inline implementation notes below, added 2026-07-26). Companion CLAUDE.md build-process document created alongside this spec. Phase 1 (claims schema, 20-claim seed set, seeded date generator) complete and pushed. FinCEN/NHCAA sourcing independently verified and corrected 2026-07-27 (see Section 2 and the closing citations). Next: author the three RAG corpora (Phase 2).
 
 
 The Core Thesis
@@ -71,7 +71,7 @@ In-network vs. out-of-network rates
 Prior-authorization requirements by procedure type
 
 
-Fraud-Indicator Reference (sourced from FinCEN's March 2026 Advisory on Health Care Fraud Schemes and NHCAA's public consumer information — real, named, publicly documented categories, not proprietary insurer models):
+Fraud-Indicator Reference (corrected sourcing, verified 2026-07-27 — see Open Items note below): the five billing-fraud typology names are standard, widely-recognized industry terminology — enforced across OIG investigations, DOJ False Claims Act cases, and CMS's own coding-integrity program (the National Correct Coding Initiative, specifically for unbundling) — not FinCEN's own formal taxonomy. The volume-spike pattern specifically IS named in FinCEN's March 2026 Advisory (FIN-2026-A001), which also uses "non-existent, exploitative, substandard, or unnecessary medical care" language overlapping two of these categories. NHCAA's public consumer information contributes the broader "intentional misrepresentation" framing. None of this is a proprietary insurer model:
 
 
 Phantom billing — filing a claim for a good or service that was never provided to the patient at all
@@ -313,7 +313,7 @@ Non-material example: missing patient phone number — nothing downstream depend
 Recommendation logic: material gap → Request Additional Info (holds the claim, pauses the SLA clock per Section 5a). Non-material gap → Approve, with the missing field flagged as a non-blocking data-quality note — this is a legitimate, real use case: the system correctly recognizes that not every imperfection should block a decision.
 
 
-Ambiguous — five categories, authored for this project (no external body publishes an official taxonomy for this, unlike the FinCEN-sourced fraud list — worth noting this distinction explicitly, since it's original categorization work, not a borrowed framework):
+Ambiguous — five categories, authored for this project (no external body publishes an official taxonomy for this, unlike the fraud list above, which is standard industry terminology — worth noting this distinction explicitly, since it's original categorization work, not a borrowed framework):
 
 
 Diagnosis-procedure plausibility — could be a legitimate complication, could be upcoding; genuinely unresolvable from the claim alone
@@ -396,7 +396,7 @@ Complex coverage math (2 scenarios, 3 records):
 1 combo pair — 2 records
 
 
-Fraud (6 scenarios, 7 records) — mapped to FinCEN's five named typologies plus the volume-spike pattern:
+Fraud (6 scenarios, 7 records) — mapped to five standard, industry-recognized billing-fraud typologies plus FinCEN's own volume-spike red flag:
 
 
 4 CMS-1500-only claims: phantom billing, unbundling, unnecessary/substandard care, double billing (duplicate line items within the CMS-1500's own service-line table)
@@ -475,7 +475,7 @@ Persistence model (decided 2026-07-26): pipeline output (evidence, confidence, r
 
 
 
-FinCEN, Advisory on Health Care Fraud Schemes Targeting Medicare, Medicaid, and Other Federal and State Health Care Benefit Programs (FIN-2026-A001, March 30, 2026) — source of the five named billing-fraud typologies and the billing-volume-spike pattern.
+FinCEN, Advisory on Health Care Fraud Schemes Targeting Medicare, Medicaid, and Other Federal and State Health Care Benefit Programs (FIN-2026-A001, March 30, 2026, independently fetched and verified 2026-07-27) — source of the billing-volume-spike red-flag pattern and its "non-existent, exploitative, substandard, or unnecessary medical care" framing. The five billing-fraud typology names (phantom billing, upcoding, unbundling, double billing, unnecessary/substandard care) are standard industry terminology grounded in OIG/DOJ/CMS-NCCI enforcement context, not FinCEN's own formal taxonomy — corrected from an earlier draft of this spec that over-attributed them to this advisory specifically.
 NHCAA (National Health Care Anti-Fraud Association), Consumer Information page — source of the broader legal framing (intentional misrepresentation as the common thread across fraud types) and public fraud-cost estimates.
 Guidewire ClaimCenter (product screenshots, reviewed directly) — validated the worklist/severity-tag/audit-log/embedded-grounded-assistant patterns used throughout this spec. ProNavigator specifically confirmed the "cite the source document + include a disclaimer" pattern independently arrived at in this project's confidence-tagging design.
 Snapsheet, HealthEdge/HealthRules Payer — confirmed straight-through processing rates (up to 90%) and role-based, severity-tagged dashboard patterns.

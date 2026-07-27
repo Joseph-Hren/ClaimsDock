@@ -248,13 +248,13 @@ g.node:hover .node-box { filter:drop-shadow(0 4px 7px rgba(0,0,0,0.20)); }
 
     { id:'catFraud', cluster:'pipeline', x:600, y:100, w:200, h:70, kind:'Category',
       title:'Fraudulent', sub:'6 named typologies',
-      detail:`<p>Sourced from FinCEN's advisory and NHCAA's public framing — real, named categories, not a proprietary model:</p>
+      detail:`<p>Standard, widely-recognized health care fraud terminology — enforced across OIG investigations, DOJ False Claims Act cases, and CMS's own coding-integrity program (unbundling specifically, via the National Correct Coding Initiative) — not a proprietary model. The volume-spike pattern is the one item here actually named in FinCEN's own FIN-2026-A001 advisory (March 2026), which flags a sudden reimbursement increase — especially following a change in provider ownership — as a red flag:</p>
       <ul><li>Phantom billing</li><li>Upcoding</li><li>Unbundling</li><li>Double billing</li><li>Unnecessary/substandard care</li><li>Sudden billing-volume spike</li></ul>
       <p><strong>Recommendation logic:</strong> tied to confidence, not flat. High Confidence → Deny. Confident / Suspected / Uncertain → Escalate, never Deny on a shaky signal. Never recommend Approve.</p>`},
 
     { id:'catAmbiguous', cluster:'pipeline', x:600, y:206, w:200, h:70, kind:'Category',
       title:'Ambiguous', sub:'5 authored categories',
-      detail:`<p>Original categorization work — no external body publishes an official taxonomy here, unlike the FinCEN-sourced fraud list:</p>
+      detail:`<p>Original categorization work — no external body publishes an official taxonomy here, unlike the fraud categories above, which are standard industry terminology:</p>
       <ul><li>Diagnosis-procedure plausibility</li><li>Coverage applicability</li><li>Coordination of benefits</li><li>Responsible-party conflict</li><li>Provider-pattern oddity</li></ul>
       <p><strong>Recommendation logic:</strong> always Escalate — genuine ambiguity can't be resolved by the system itself, by definition.</p>`},
 

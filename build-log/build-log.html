@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClaimsDock build log :: Joseph R. Hren</title>
+<link rel="stylesheet" href="build-log.css">
+</head>
+<body>
+
+<header class="masthead">
+  <div class="wrap">
+  <div class="col">
+    <span class="eyebrow">Build log · Claude Code prototype</span>
+    <h1>ClaimsDock</h1>
+    <p class="dek">A medical-claims adjudication copilot: an automatic evaluation pipeline that reads incoming claims for evidence, fraud indicators, and coverage math, paired with an on-demand router and an embedded grounded-assistant panel (Anchor) for the adjuster to ask questions of. Every recommendation traces to a real source document; nothing becomes a real action without a human's approval. This page tracks the build as it happens, starting before any code exists.</p>
+    <div class="meta-row">
+      <span>Role: <b>Product direction, spec authorship, review</b></span>
+      <span>Build: <b>Claude Code</b></span>
+      <span>Stack: <b>Next.js, TypeScript, Anthropic API (tool-use + RAG)</b></span>
+      <span>Status: <b>Planning &amp; architecture complete — no application code yet</b></span>
+    </div>
+  </div>
+  </div>
+</header>
+
+<main>
+
+  <section id="overview">
+    <div class="wrap">
+    <div class="col">
+      <h2>What this is</h2>
+      <p>Most claims should never need a human at all. ClaimsDock's core thesis: a router that decides what a plain-language question actually needs, grounding so every recommendation traces to a real policy line rather than an invented one, honest uncertainty tagged with a reason rather than a bare confidence score, and a human gate so nothing becomes a real action without explicit approval. Applied here to medical claims specifically — a domain that sits at the intersection of health, insurance, and finance — but the same skeleton could re-skin for other operational review work.</p>
+      <p>The functional spec (<code>project-spec.txt</code>) was written and revised before any code — architecture, taxonomies, and rules first, interface second. That document is the domain authority; this log tracks the build against it.</p>
+    </div>
+    </div>
+  </section>
+
+  <section id="approach">
+    <div class="wrap">
+    <div class="col">
+      <h2>Working from a fixed functional spec, no visual one yet</h2>
+      <p>Unlike a build that starts from an existing Figma file, ClaimsDock's visual design doesn't exist yet — it's being worked out in parallel, in a separate design thread. So the build order runs backend/logic first, verified with a plain placeholder interface, with the real UI wired in once that design lands — rather than waiting on it to start anything.</p>
+      <div class="pillar-grid">
+        <div class="pillar"><span class="eyebrow">Frontend</span><p>Not started. Design in progress separately; a plain placeholder UI verifies the logic below in the meantime.</p></div>
+        <div class="pillar"><span class="eyebrow">Backend</span><p>Next.js API routes: a batched evaluation pipeline, a tool-use router, and a retrieval layer for grounded answers.</p></div>
+        <div class="pillar"><span class="eyebrow">Model</span><p>Claude, called twice per pipeline run (evidence, then confidence + recommendation) — batched across all claims, not once per claim — plus tool-use for routing and Anchor's Q&amp;A.</p></div>
+        <div class="pillar"><span class="eyebrow">Spec</span><p><code>project-spec.txt</code> is the living domain document; <code>CLAUDE.md</code> governs build process, phases, and file structure.</p></div>
+      </div>
+    </div>
+    </div>
+  </section>
+
+  <section id="milestones">
+    <div class="wrap">
+    <div class="col">
+      <h2>Build phases</h2>
+      <p>Logged here as they're completed. The full 11-phase order lives in <code>CLAUDE.md</code>; shown below for reference, with detail landing under each as it happens.</p>
+    </div>
+    </div>
+
+    <div class="wrap">
+      <ol class="session-list">
+
+        <li class="session session--done">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>Architecture &amp; build-process planning</h3><span class="pill pill--done">Done</span></div>
+            <p class="session-summary">project-spec.txt · CLAUDE.md</p>
+            <p>Before any code: read the full functional spec end to end and worked through what it left open. Settled the evaluation pipeline down to two batched API calls total per run (not one call per claim, not three per claim) by moving severity, status, and the category-to-action mapping out of the model's hands entirely and into deterministic code — the spec was already explicit that those are calculations, not judgment calls, so the pipeline redesign just followed that logic all the way through. Confirmed the router as a real tool-use judgment step, not string-matching. Chose real chunked-embedding retrieval over full-context stuffing for the three RAG corpora specifically so the project demonstrates actual retrieval mechanics, not a shortcut past them — scoped to an in-memory vector store rather than a hosted database, since the corpora are small by design. Resolved a real multi-user question along the way: pipeline output (evidence, confidence, recommendation) is cached per ISO week and shared, since it depends only on claim data; adjuster actions are private, client-side, per browser — which is also what guarantees a new visitor always sees the full, untouched queue.</p>
+            <p>All of this is now written into <code>project-spec.txt</code> (amended in place, with each decision dated inline) and a new <code>CLAUDE.md</code> that sets the stack, file structure, and the 11-phase build order below. Two open items carried forward on purpose rather than forced to a premature decision: which embedding provider to use for retrieval (a local, self-hosted model vs. Voyage AI), and the batching strategy once the claim set grows past 20 toward a production-scale ~100+.</p>
+          </div>
+        </li>
+
+        <li class="session session--planned">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>Claims schema &amp; seed generator</h3><span class="pill pill--planned">Planned</span></div>
+            <p class="session-summary">lib/claims/</p>
+            <p>The 20-claim test set across CMS-1500 and UB-04 structures, box-number field names, ISO-week-seeded relative submission dates.</p>
+          </div>
+        </li>
+
+        <li class="session session--planned">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>Author the three RAG corpora</h3><span class="pill pill--planned">Planned</span></div>
+            <p class="session-summary">content/corpora/</p>
+            <p>Condensed, medical-claims-scoped reference documents — coverage policy, fraud-indicator, deadline reference — each citing its real source without reproducing it at length.</p>
+          </div>
+        </li>
+
+        <li class="session session--planned">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>Deterministic calculation layer</h3><span class="pill pill--planned">Planned</span></div>
+            <p class="session-summary">lib/rules/</p>
+            <p>Severity, SLA/deadline math, coverage math, the category-plus-confidence-tier action lookup — pure functions, unit tested, no API calls, built and verified before any model call touches them.</p>
+          </div>
+        </li>
+
+        <li class="session session--planned">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>RAG retrieval layer</h3><span class="pill pill--planned">Planned</span></div>
+            <p class="session-summary">lib/rag/</p>
+            <p>Chunking, embeddings, in-memory cosine-similarity search. Embedding provider (local model vs. Voyage AI) decided at the start of this phase.</p>
+          </div>
+        </li>
+
+        <li class="session session--planned">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>Evaluation pipeline</h3><span class="pill pill--planned">Planned</span></div>
+            <p class="session-summary">lib/pipeline/</p>
+            <p>Two batched Claude calls across all claims: Analysis (evidence + proposed category), then Confidence judge (tier, blind to Call 1's reasoning) plus recommendation drafting.</p>
+          </div>
+        </li>
+
+        <li class="session session--planned">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>Interactive router &amp; Anchor</h3><span class="pill pill--planned">Planned</span></div>
+            <p class="session-summary">lib/router/</p>
+            <p>Tool-use dispatch across the four router tools (Lookup, Analysis, Recommendation, Reference Lookup), grounded through the retrieval layer.</p>
+          </div>
+        </li>
+
+        <li class="session session--planned">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>Human gate &amp; persistence</h3><span class="pill pill--planned">Planned</span></div>
+            <p class="session-summary">app/api/ · localStorage</p>
+            <p>Approve / approve-with-edit / escalate / deny actions, the audit log, client-side persistence per browser.</p>
+          </div>
+        </li>
+
+        <li class="session session--planned">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>Placeholder UI</h3><span class="pill pill--planned">Planned</span></div>
+            <p class="session-summary">app/</p>
+            <p>Plain, unstyled worklist and card views — verifies phases 1–7 end to end before any real design exists. First screenshots in this log land here.</p>
+          </div>
+        </li>
+
+        <li class="session session--planned">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>Real UI</h3><span class="pill pill--planned">Planned</span></div>
+            <p class="session-summary">components/</p>
+            <p>Wired in once the Figma design (built in a separate thread) is ready — replaces the placeholder UI.</p>
+          </div>
+        </li>
+
+        <li class="session session--planned">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>Workflow visualization</h3><span class="pill pill--planned">Planned</span></div>
+            <p class="session-summary">standalone Artifact</p>
+            <p>A D3-based diagram of the full system — pipeline, router, human gate, confidence/severity/status logic, category taxonomies. Not gated on any other phase; can land any time in parallel.</p>
+          </div>
+        </li>
+
+        <li class="session session--planned">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>100+ claim scale-up</h3><span class="pill pill--planned">Planned</span></div>
+            <p class="session-summary">Scope TBD</p>
+            <p>Batching strategy for a production-scale claim set, deferred until the 20-claim build is proven end to end.</p>
+          </div>
+        </li>
+
+      </ol>
+    </div>
+  </section>
+
+  <section id="working-notes">
+    <div class="wrap">
+    <div class="col">
+      <h2>How this got planned</h2>
+      <ul class="notes-list">
+        <li>
+          <span class="note-label">Spec first, code second</span>
+          <p>Every architectural question below got resolved in the spec document before any file was written — the two-call pipeline, the retrieval mechanism, the persistence split. Nothing here got decided implicitly while writing code.</p>
+        </li>
+        <li>
+          <span class="note-label">Decisions get dated and inlined, not left implicit</span>
+          <p>Each resolved question was written into <code>project-spec.txt</code> as an "implementation note," dated, next to the section it amends — so the reasoning stays attached to the rule instead of living only in a chat transcript.</p>
+        </li>
+        <li>
+          <span class="note-label">Real RAG, correctly scoped</span>
+          <p>Chunked embeddings and an in-memory similarity search over a small, purpose-written corpus — not a hosted vector database the project doesn't need, and not full-context stuffing that would skip demonstrating retrieval at all.</p>
+        </li>
+        <li>
+          <span class="note-label">Calculations stay calculations</span>
+          <p>Severity, SLA math, and coverage math were already specified as deterministic — the pipeline redesign made sure the code matches that on purpose, rather than letting a model quietly re-absorb work that was designed to be a lookup.</p>
+        </li>
+        <li>
+          <span class="note-label">Open questions stay open, on purpose</span>
+          <p>Embedding provider and 100+ claim batching strategy were both deliberately left undecided rather than forced early — real unknowns get flagged and revisited at the phase they actually matter, not guessed at now.</p>
+        </li>
+      </ul>
+    </div>
+    </div>
+  </section>
+
+  <section id="status">
+    <div class="wrap">
+    <div class="col">
+      <h2>Where it stands</h2>
+      <table class="status-table">
+        <thead><tr><th>Phase</th><th>State</th></tr></thead>
+        <tbody>
+          <tr><td>Architecture &amp; build-process planning</td><td>Done — spec finalized, CLAUDE.md written</td></tr>
+          <tr><td>Claims schema &amp; seed generator</td><td>Not started</td></tr>
+          <tr><td>RAG corpora</td><td>Not started</td></tr>
+          <tr><td>Deterministic calculation layer</td><td>Not started</td></tr>
+          <tr><td>RAG retrieval layer</td><td>Not started</td></tr>
+          <tr><td>Evaluation pipeline</td><td>Not started</td></tr>
+          <tr><td>Interactive router &amp; Anchor</td><td>Not started</td></tr>
+          <tr><td>Human gate &amp; persistence</td><td>Not started</td></tr>
+          <tr><td>Placeholder UI</td><td>Not started</td></tr>
+          <tr><td>Real UI</td><td>Not started — blocked on Figma design, in progress separately</td></tr>
+          <tr><td>Workflow visualization</td><td>Not started</td></tr>
+          <tr><td>100+ claim scale-up</td><td>Not started — deferred by design</td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+  <div class="col">
+    <p>Living document — updated alongside the build, not after it.</p>
+    <p>Prototype built with Claude Code · this page last updated July 26, 2026.</p>
+  </div>
+  </div>
+</footer>
+
+</body>
+</html>

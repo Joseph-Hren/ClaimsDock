@@ -1,0 +1,507 @@
+Claims copilot spec · MDClaimsDock — Project Spec
+
+Living document. Update as decisions get made or revised.
+
+Status: Architecture defined. Naming locked: platform = ClaimsDock, embedded assistant panel = Anchor. Pipeline API-call structure, persistence model, and RAG mechanism decided (see inline implementation notes below, added 2026-07-26). Companion CLAUDE.md build-process document created alongside this spec. Next: corpora authoring, claims seed data generation.
+
+
+The Core Thesis
+
+A single underlying skeleton, applied to medical claims specifically:
+
+
+Router — decides which of several actions a plain-language question actually requires
+Grounding (RAG) — every recommendation is traceable to real policy/heuristic source material, never invented
+Honest uncertainty — confidence is tagged with why, not just a bare score
+Human gate — nothing becomes a real action without explicit human approval
+
+
+This same skeleton could be re-skinned for finance ops, access management, staffing, etc. — medical claims was chosen because it sits at the intersection of health, insurance, and finance simultaneously, and because it draws on real, provable Kaiser-era domain fluency rather than borrowed vocabulary.
+
+
+1. Two Separate Layers: the Evaluation Pipeline and the Interactive Router
+
+These were previously conflated under one "router" heading — worth separating cleanly, since they operate completely differently and CC needs to build them as two distinct systems, not one.
+
+The Evaluation Pipeline (automatic, fixed sequence, runs once per claim, no human involved)
+
+When a claim enters the system, it runs through a fixed three-step sequence — not a choice between options, the same three steps in the same order, every time:
+
+
+Analysis — gathers and reports raw evidence only (e.g., "duplicate CPT code and service date found on lines 3 and 5, identical billed amount"; "this provider's claim volume this month is 3.2x their trailing 6-month average"). No confidence tier is assigned at this step — evidence only, no judgment yet.
+Confidence judge call — a separate, isolated API call, shown only the evidence from step 1 (not the reasoning or narrative that produced it), independently classifies it into a confidence tier using the rubric in Section 3. This call's output is the tier — there's no pass/fail step grading a prior claim, since no tier was asserted before this point.
+Recommendation — drafts a suggested next step, informed by both the evidence and the now-assigned confidence tier.
+
+
+This pipeline runs automatically for all claims the moment they enter the system (all 20 test claims at once during development; the same pipeline at whatever volume the platform eventually holds). No user action triggers it.
+
+Implementation note — API call count and batching (decided 2026-07-26): the pipeline runs as exactly two model API calls total per run, each batched across every claim in the set (not one call per claim). Call 1 (Analysis) evaluates all claims together and returns evidence plus a proposed category (fraud/ambiguous/missing-data/complex-math/clean) for each — no tier, no recommendation. Call 2 (Confidence judge) is shown only Call 1's evidence, blind to its reasoning, and for every claim: assigns the confidence tier, then drafts the recommendation's phrasing and citation. This section's original draft never fixed Recommendation to a specific call number — folding it into Call 2 resolves that gap rather than deviating from the isolation rationale in Section 3, since drafting a recommendation from an already-fixed tier isn't the model grading its own evidence-finding.
+
+Two inputs to this pipeline are deliberately NOT model output: severity (Section 7b) and the category-plus-tier → action lookup (Section 7c) are both computed in code from hard data, never asked of the model. Initial status (flagged vs. clean) is likewise derived from whether Call 1's evidence is non-empty, not separately judged.
+
+For the 20-claim test set, this means 2 total API calls per pipeline run, not 40. Pipeline output (evidence, confidence, recommendation) is a property of the claim data and the current ISO-week seed, not of who's viewing it — so it's computed once per ISO week and cached/shared across every visitor, recomputed only when the week's seed changes (see Section 11). Adjuster actions (approve/deny/escalate/edit, audit log entries) are the opposite — stored client-side, per browser, never written back to the shared pipeline cache. This is deliberate: a new visitor always sees the full, untouched 20-claim queue regardless of what any other visitor has clicked, at zero infrastructure cost.
+
+Scaling past 20 claims (production goal, ~100+ per Section 10) may require chunking each call into multiple batches rather than one — deferred until that phase begins; not a test-scale concern.
+
+The Interactive Router (on-demand, triggered only by a human question)
+
+This is the four-tool table below. Its job is answering questions a person asks, not processing new claims — it can reuse the Pipeline's underlying Analysis function (e.g., if someone explicitly asks "re-check this claim"), but it never runs automatically, and it doesn't have to choose anything when a new claim arrives — that's the Pipeline's job.
+
+ToolTriggered byRequires a claim ID?Pulls / DoesLookup"What's the status of claim X"YesPatient, provider, procedure/diagnosis codes, billed amount, status, severity, confidence, historyAnalysis"Does this look off"YesRe-runs or re-surfaces fraud-heuristic evidence against the claim (reuses the Pipeline's Analysis function)Recommendation"What should I do with this"YesDrafts a suggested next step (approve, deny, escalate, request more info) — drafts only, never executes (see Human Gate clarification below)Reference Lookup"What does ERISA require for pre-service claims," "What counts as upcoding under FinCEN's guidance"NoAnswers general questions against the regulatory/policy reference corpus, independent of any specific claim
+
+Three independent failure modes to design against: wrong tool chosen, right tool, wrong parameters (e.g., correct analysis run, but on the wrong claim ID), and — specific to Reference Lookup — incorrectly treating a general question as claim-specific or vice versa (e.g., routing "what does ERISA say about X" into Lookup, which has no claim to pull).
+
+Implementation note (decided 2026-07-26): the Router is implemented as a Claude tool-use / function-calling step — the model classifies the question into one of the four tools and extracts parameters (e.g., claim ID) as a judgment call, not deterministic string-matching. This is necessary precisely because the three failure modes above only make sense as risks if a model is doing the classifying.
+
+Clarification on action execution — neither the Pipeline nor the Router ever finalizes a status change. Recommendation only ever drafts a suggested action. The actual state change (updating status, writing the audit log entry) happens exclusively through the human gate: an explicit button click, or — if the adjuster types a command instead — a natural-language instruction mapped deterministically, one-to-one, to that same underlying function a button would call. There is no step where the model infers intent and finalizes an action on its own; if that boundary blurred, the "human must approve" premise of the whole platform would be theater rather than real. This is worth being explicit about in the build: Recommendation and Execution are two different functions, not one.
+
+What happens after an action is taken: ClaimsDock updates the claim's status and appends an audit log entry. It does not integrate with or simulate a downstream billing/reimbursement system — in the real world the claim would move to a payments department at this point; here, the status change and audit trail are the simulation of that handoff, not a connection to an actual payment system.
+
+Open question: how does the router handle an ambiguous or overly broad query ("show me problem claims")? Needs either a clarifying question or a stated default interpretation ("Showing flagged claims — did you mean something else?"). Not yet resolved.
+
+
+2. Grounding — Three RAG Corpora
+
+Coverage/Adjudication Policy (synthetic, written in-house, structurally realistic):
+
+
+Plan coverage percentage by procedure type
+Deductible met / not met logic
+In-network vs. out-of-network rates
+Prior-authorization requirements by procedure type
+
+
+Fraud-Indicator Reference (sourced from FinCEN's March 2026 Advisory on Health Care Fraud Schemes and NHCAA's public consumer information — real, named, publicly documented categories, not proprietary insurer models):
+
+
+Phantom billing — filing a claim for a good or service that was never provided to the patient at all
+Upcoding — filing a claim for a more expensive good or service than the patient actually received
+Unbundling — filing multiple separate claims for goods or services that should be billed together as one
+Double billing — filing multiple claims for the exact same good or service
+Billing for exploitative, substandard, or unnecessary care — care that technically occurred but was medically unnecessary or low-quality
+Sudden billing-volume spike — a provider with consistently low/moderate billing suddenly filing a large volume of claims (a documented FinCEN red-flag pattern, not a formal typology name — cite it as such)
+
+
+NHCAA's broader framing: the common thread across all of the above is intentional misrepresentation of the nature of services, dates rendered, medical record, diagnosis, charges, or provider/patient identity, done specifically to obtain a payment — or a larger payment — than what's actually owed.
+
+Note on sourcing precision: "diagnosis-procedure code mismatch" is a reasonable inferred symptom of upcoding, not itself a separately named FinCEN/NHCAA category — cite it as an inference, not a formal term, if used.
+
+Regulatory Deadline Reference (sourced from ERISA claims-procedure regulations and state prompt-pay statute summaries — see Section 5a for the full tiered deadline logic):
+
+
+Urgent/expedited claim decisions: 72 hours
+Pre-service claim decisions: 15 days
+Post-service claim decisions: 30 days
+State prompt-pay timing (30–60 days, applies once a claim is "clean") as the reference point for fully-insured plans where ERISA doesn't directly govern
+
+
+Why three corpora, and why Reference Lookup can query all of them without a claim ID: the Analysis and Recommendation tools use the Coverage Policy and Fraud-Indicator corpora in the context of one specific claim — pulling the relevant line to explain why this claim was flagged or how this payout was calculated. Reference Lookup queries the same three corpora, but with no claim in context at all — answering a general question like "what does ERISA require for pre-service claims" or "what counts as unbundling" the same way an adjuster might ask a colleague or look something up in a reference manual, entirely independent of whatever claim happens to be open at the time.
+
+RAG mechanism (decided 2026-07-26): all three corpora are original, condensed reference documents written specifically for this project's medical-claims scope — not the full external FinCEN advisory, NHCAA materials, or ERISA regulations reproduced at length. Each doc accurately names and cites its real source but stays to a few pages, scoped to what's actually relevant here.
+
+Retrieval is real, not simulated: each corpus is chunked (e.g., one chunk per fraud category, one per SLA tier), each chunk is embedded once, and the resulting vectors are held in a plain in-memory array — no hosted vector database, since the total chunk count across all three corpora is small enough that comparing a query's embedding against every chunk directly is instant. At query time (an Anchor question, or a Pipeline call citing policy), the question is embedded and the top-matching chunks are retrieved and cited by source name. Embedding provider is not yet decided — a local, self-hosted embedding model (no added external API) vs. Voyage AI (Anthropic's recommended embedding partner, adds a second API dependency) — see Open Items.
+
+Claim form templates (real, public, non-proprietary):
+
+
+CMS-1500 — used by individual/non-institutional providers (physicians, therapists, independent labs) for professional services. 33 fields, three logical zones: patient/insurance info, provider info, procedure/diagnosis line items.
+UB-04 (CMS-1450) — used by institutional providers (hospitals, ambulatory surgery centers, nursing facilities) for facility-level billing. 81 fields — denser, includes revenue codes and department-level detail CMS-1500 doesn't need.
+Important real-world nuance: a single hospital procedure often generates two separate claims — a CMS-1500 for the surgeon's professional fee and a UB-04 for the facility's fee — same event, same patient, two different billing entities. Both forms are publicly available blank templates from CMS/NUCC — no licensing concern, structurally authentic without any real patient data.
+
+
+Generate simpler individual-practice/therapist claims on the CMS-1500 structure, and hospital/clinic claims on the denser UB-04 structure — this variation in form complexity is a deliberate test of whether the router/extraction logic can handle genuinely different document shapes, not just different content.
+
+Every recommendation the adjuster sees should be traceable to a specific line in one of these three RAG documents — not a vibe.
+
+
+3. Confidence — What It Actually Measures, and How It's Assigned
+
+What confidence measures: not "how likely is this true" as a bare probability — models are known to be unreliable at meaningful graduated scoring. It measures how directly the available evidence supports the specific conclusion reached, categorized by corroboration count. This applies to any conclusion the Pipeline's Analysis step reaches — including a "clean" read, not just positive findings like fraud or ambiguity. A clean read can itself be well-supported (multiple corroborating signals: clean provider history, all codes match, no coordination-of-benefits ambiguity) or weakly supported (a brand-new provider with no history to compare against, one data point merely consistent with clean rather than confirming it).
+
+The four-tier rubric:
+
+TierCriteriaHigh ConfidenceTwo or more independent signals converge on the same conclusionConfidentOne clear, direct match — no corroborating second signal, but nothing contradicts it eitherSuspectedA partial or ambiguous pattern match — plausible, not cleanUncertainA stretch inference, minimal supporting evidence, or contradictory signals present
+
+How it's assigned — two separate API calls, not one:
+
+
+Call 1 (Analysis, part of the Evaluation Pipeline) reports structured evidence only — no tier attached.
+Call 2 (the isolated judge) is shown only that evidence — not Call 1's reasoning or narrative — and independently classifies it into one of the four tiers above. This call's output is the confidence tier.
+
+
+Why two calls instead of one: a single call that both finds a pattern and grades its own confidence in the same breath is the model checking its own work — the same failure mode as asking someone to proofread their own writing. An isolated second call, blind to the first call's reasoning path, is the more rigorous pattern for exactly this reason. The cost/latency tradeoff (two calls instead of one) is a non-issue at this project's test scale and is worth explicitly noting as a deliberate choice — this is a case where the extra rigor is the point, not an unnecessary expense.
+
+Confidence never changes severity. These stay two fully independent axes — severity is a pure function of dollar amount, disputed medical necessity, and deadline proximity (Section 7b); confidence is a pure function of evidential support (this section). Confidence's only downstream effect is gating auto-approval (Section 4) and determining what a human sees when a claim is surfaced for review — it never feeds into or modifies the severity calculation.
+
+Confidence only appears at the card level, never in the list/menu view — a bare confidence badge with no attached reasoning would be a decorative, evidence-less claim, which the whole project is explicitly designed to avoid.
+
+
+4. The Human Gate
+
+Auto-approval — the one exception to "every recommendation pauses for human approval": a claim auto-approves, with no human click required, only if status is "Submitted, no flags" AND confidence is High Confidence or Confident. A clean read with Suspected or Uncertain confidence does not auto-approve — it surfaces for human review with an honest reason ("clean read, but confidence in that read is low — [specific reason]"), not because something's wrong, but because the system isn't fully sure nothing is. This is a deliberate, straight-through-processing design (no RBAC, no supervisor spot-check layer on top of auto-approved claims) — matches real-world claims platforms, where the majority of simple, well-supported claims are resolved without any human touching them at all.
+
+Every other recommendation — anything flagged, ambiguous, missing data, or clean-but-low-confidence — pauses for explicit approval before becoming a real action.
+
+Actions available per claim:
+
+
+Approve as recommended
+Approve with edit (opens override field — see Coverage Math below)
+Escalate for review
+Deny — requires a justification, same discipline as override (not yet fully speced — see Open Items)
+
+
+Feedback scoping: if an adjuster edits one field (e.g., dollar amount), the system must apply that single correction without silently re-running the full analysis or re-pulling the record from scratch. (Directly modeled on a flaw caught in course material — feedback must be scoped to the specific step it applies to.)
+
+
+5. Status Taxonomy (Menu/List View)
+
+Status = lifecycle position. Separate axis from both confidence and severity (confidence = what the system found; severity = how much is at stake; status = where the claim is in the pipeline).
+
+Full, current status list lives in Section 7a. Note: an earlier draft of this spec treated "Overdue" as a sixth status value — this was revised. Deadline breach is now handled entirely as a severity input (Section 7b), not a status; status stays a clean 5-value lifecycle field.
+
+Status badge is the fastest-scannable element in the list view — an adjuster triaging a queue should be able to sort by status color before reading a single sentence.
+
+
+5a. SLA & Deadline Logic
+
+Real-world basis: federal ERISA rules tier claim-decision deadlines by urgency, not a single flat number. State "prompt pay" laws layer separately on top, typically requiring payment within 30–60 days once a claim is "clean" (complete, no missing information) — the clock doesn't start on an incomplete claim. Where a plan is self-funded and federally regulated, ERISA's deadlines govern directly; state prompt-pay timing is the reference point for fully-insured plans instead.
+
+Adopted model — matching ERISA's actual tiers precisely, not a flattened approximation:
+
+Claim urgencySLA deadlineUrgent / expedited (flagged high-severity, or explicitly marked urgent at intake)72 hoursPre-service (requires a coverage decision before care is rendered — e.g., prior-auth-adjacent claims)15 daysPost-service (standard claim submitted after care was already provided — the majority of claims in this build)30 days
+
+The clock only starts once a claim is "clean" — it pauses while sitting in a missing-information hold (an incomplete required field on the claim itself, not an external document), and resumes once the missing field is provided. This mirrors the real distinction between ERISA's decision deadline and the separate information-request pause built into both ERISA and state prompt-pay rules.
+
+Deadline breach is not a status — it's a severity input. A claim past its tier-appropriate SLA deadline doesn't move to a separate "Overdue" status; instead, the breach forces severity to Critical, full stop (see Section 7b's escalation table). This keeps status purely about lifecycle position and severity purely about stakes — a claim can be "Needs Approval" and Critical-due-to-deadline at the same time, without needing a sixth status value to represent that combination.
+
+Assigning the urgency tier at intake — honest simplification, worth stating plainly: all 20 test claims are inherently post-service (a CMS-1500 or UB-04 bills for care already rendered) — none represent ERISA's "pre-service" scenario, which is really about a prior-authorization request submitted before treatment. So in practice, this build only needs two tiers in active use:
+
+
+Standard (30 days) — the default for essentially all claims in this build.
+Urgent (72 hours) — assigned if the underlying care itself was emergency or inpatient in nature (ER visit, emergency surgery, ICU admission) — an approximation of ERISA's real urgent-care standard, applied here to retrospective billing rather than its original pre-authorization context. Worth stating as a deliberate, acknowledged simplification, not presented as strictly regulatory-accurate.
+The 15-day pre-service tier is defined in the reference corpus for completeness (Anchor may be asked about it directly) but isn't expected to apply to any claim in the actual test set.
+
+
+6. Coverage Math & Override Logic
+
+Adjusting the payout amount is not free-text — it's calculated from concrete inputs, with override permitted only within a policy-permitted range, and requires a logged justification.
+
+Inputs to the calculation:
+
+
+Plan coverage percentage for the procedure type
+Deductible met/not met status
+In-network vs. out-of-network rate
+Prior-authorization required and present (yes/no)
+
+
+Example: Billed $1,140 → plan covers 80% after deductible (met) → system-calculated coverage: $912 → adjuster can approve as-is, or override with a required one-line justification (e.g., "prior auth confirmed by phone, not yet in system").
+
+This override-with-justification pattern doubles as a demonstration of designing for auditability, not just usability — real claims systems require this, it's not decorative rigor.
+
+
+7. Interface Structure
+
+Real-world validation: Guidewire ClaimCenter, Snapsheet, and HealthEdge all confirm the same worklist → drill-into-card pattern used here. No production platform in this space works primarily through chat.
+
+Dashboard / Menu (Worklist) — VDBP-style row layout
+
+What renders per row, at a glance, no drill-down required:
+
+
+Claim ID, patient, provider
+Status badge (see full taxonomy below)
+Severity tag (see below) — confirmed appropriate for row-level display by Guidewire's own product (their "High Severity Alert," "Litigation Warning," "Large Loss" tags all live directly in the worklist row, not gated behind a click)
+SLA/aging indicator — time remaining in the current deadline tier; feeds directly into the severity calculation (Section 7b) rather than being its own flag
+NOT shown in the row: confidence. Confidence requires its accompanying "why," which is card-sized content — a bare confidence badge with no reasoning attached would be exactly the decorative, evidence-less claim this project is designed to avoid.
+
+
+Prioritization baseline (decided): the worklist's default view is sorted by severity descending, excluding Resolved claims — the most urgent items are simply the natural resting state of the queue, not something a user has to think to filter for.
+
+Open UI question, not yet resolved: whether to additionally surface a distinct "Top 5 needing attention" module above the main worklist, or whether the default severity-sorted table already serves that purpose on its own. Revisit during the UI design pass.
+
+Controls surrounding the worklist:
+
+
+Natural-language query as entry point ("show me all flagged claims," "show me claims for Dr. Renner")
+Sort/filter controls independent of query — by status, severity, dollar amount, date submitted, SLA status
+A small, visible stat for auto-resolved volume (e.g., "12 claims auto-resolved today") — makes automated routing legible rather than invisible
+Paginated, 1–15 rows per view
+
+
+Card View (opened from a worklist row)
+
+
+Claim ID + patient + provider at top
+Status badge + severity tag (carried over from the row for context)
+Plain-language finding, 2–3 lines max
+Confidence badge + one-line evidence-quality reason (card-only, per above)
+Coverage math block, visually separated from the fraud finding
+Full claim document view — the actual CMS-1500 or UB-04 rendered, not just extracted fields, so an adjuster can verify the source
+Linked/related claims — surfaces the professional/facility pair (or any other related claim) rather than treating each claim as fully isolated
+Embedded grounded-assistant panel (see naming discussion below) — modeled directly on Guidewire's ProNavigator: adjuster asks a free-text question about this specific claim or the policy behind it, gets a plain-language answer, with the source document cited by name and an explicit disclaimer ("Answers are grounded in [policy doc]. Confirm applicability before acting.") Include lightweight thumbs-up/down feedback on each answer, same as ProNavigator.
+Audit log per claim — full timestamped history (see Section 8)
+Adjuster notes/comment field — separate from the required override justification; a free-form space for the adjuster's own reasoning, same pattern as VDBP's Comment field
+Action row: Approve / Approve with edit / Escalate / Deny
+
+
+Bulk actions (dashboard-level only, not available in card view):
+
+
+Applies to flagged, ambiguous, or escalation-worthy claims — Approve / Escalate / Deny available as bulk actions across multiple selected such claims
+Clean, high-confidence claims are not part of bulk actions at all — they auto-approve individually via the Human Gate's auto-approval rule (Section 4) the moment the Pipeline finishes evaluating them, with no batch human click involved
+Override/adjust payout amount is explicitly NOT a bulk action — requires individual review every time
+Open question: does bulk-approve re-verify each claim against current policy/analysis at the moment of action, or trust the last-known analysis label? Leaning toward re-verify as the more defensible answer for an interview, not yet finalized in build terms.
+
+
+The embedded assistant panel: Anchor
+
+Locked: platform is ClaimsDock, embedded assistant panel is Anchor.
+
+Anchor is the name for the panel modeled on Guidewire ClaimCenter's ProNavigator — an adjuster asks a free-text question about a claim or the policy behind it, gets a plain-language answer, with the source document cited by name and an explicit disclaimer that the answer is grounded in official documents and should be confirmed before acting on it. The name fits the platform's nautical logic (ClaimsDock) and is functionally accurate: an anchor is the thing that keeps something tethered to solid ground rather than drifting — exactly the job this panel does by grounding every answer in a real, citable policy document instead of an invented one.
+
+
+7a. Status Taxonomy — Full List (Updated)
+
+
+Submitted, no flags — clean, no coverage ambiguity
+Submitted, flagged — analysis found something; confidence-and-reason card becomes relevant
+Needs approval — recommendation drafted, sitting at the human gate
+Escalated — kicked upward past this system's authority
+Resolved — approved, denied, or otherwise closed, final action logged
+
+
+(A claim past its SLA deadline does not get a sixth status — it stays in whichever of the above it's actually in, while its severity is forced to Critical. See Sections 5a and 7b.)
+
+7b. Severity Taxonomy — Full List, With Concrete Metrics
+
+Severity reflects stakes, independent of fraud confidence — a clean high-dollar claim and a suspicious low-dollar claim can both warrant elevated severity, for different reasons. Severity is driven by two factors combined, not dollar amount alone:
+
+Factor 1 — Dollar amount (base severity band):
+
+BandBilled amountLowUnder $500Moderate$500 – $5,000High$5,000 – $25,000CriticalOver $25,000
+
+Also treat disputed medical necessity or bodily-injury-adjacent complexity as an automatic bump to at least High, regardless of dollar amount — a low-dollar claim with a genuine medical-necessity dispute still carries real stakes.
+
+Factor 2 — Deadline proximity (escalation on top of the base band), tied directly to Section 5a's SLA tiers:
+
+% of SLA window remainingEffect on severityMore than 50% remainingNo change — severity stays at its dollar-amount band25–50% remainingEscalate one tier (Low→Moderate, Moderate→High, High→Critical)Under 25% remainingEscalate to at least High, or to Critical if already HighDeadline breached (0% or negative remaining)Automatically Critical, overriding every other factor
+
+This entire calculation is recalculated live, every time a claim is loaded or queried — never stored or cached. Because it's a pure function of current elapsed time (Section 5a) plus fixed inputs (dollar amount, medical-necessity flag), there's nothing to keep in sync manually — the same claim will correctly show a higher severity today than it did last week purely because time passed, with no update job or manual recalculation step required.
+
+Why percentage-of-window, not a flat day-count: a flat cutoff breaks the moment there are three different SLA tiers (72hr/15-day/30-day) — "3 days left" is genuinely urgent on a 72-hour claim and irrelevant on a 30-day one. Percentage-remaining scales correctly across all three tiers using the same rule. This calculation only runs against active clock time — a claim paused in a missing-information hold (Section 5a) isn't climbing toward Overdue while legitimately waiting on someone else.
+
+Important: this is a calculation, not a judgment call — it should never be left to model inference. Dollar amount and percent-of-SLA-remaining are both hard numbers computed deterministically from claim data; severity is a lookup/rule result, the same way coverage math (Section 6) is a calculation, not something an LLM estimates. Feed it as verified input to the system, exactly like axe-core-style ground truth in the earlier project this spec's discipline is modeled on.
+
+
+7c. "Why Flagged" Taxonomies and Category-Specific Recommendations
+
+Every claim's Recommendation should be informed by which category it falls into — the correct next step is not the same across categories, and treating them uniformly would be a real logic error, not just a missed nuance.
+
+Fraud — names one or more of the six categories already defined in Section 2 (phantom billing, upcoding, unbundling, double billing, unnecessary/substandard care, volume spike).
+
+
+Recommendation logic: tied to confidence tier, not flat. High Confidence → recommend Deny. Confident / Suspected / Uncertain → recommend Escalate, not Deny — a shaky fraud signal should route to a human investigator, not suggest denying a potentially legitimate claim. Never recommend Approve.
+
+
+Incomplete data — names the specific missing field(s), each tagged material or non-material to the decision at hand.
+
+
+Material example: missing rendering-provider NPI, needed to verify network status — coverage genuinely can't be calculated without it.
+Non-material example: missing patient phone number — nothing downstream depends on it.
+Recommendation logic: material gap → Request Additional Info (holds the claim, pauses the SLA clock per Section 5a). Non-material gap → Approve, with the missing field flagged as a non-blocking data-quality note — this is a legitimate, real use case: the system correctly recognizes that not every imperfection should block a decision.
+
+
+Ambiguous — five categories, authored for this project (no external body publishes an official taxonomy for this, unlike the FinCEN-sourced fraud list — worth noting this distinction explicitly, since it's original categorization work, not a borrowed framework):
+
+
+Diagnosis-procedure plausibility — could be a legitimate complication, could be upcoding; genuinely unresolvable from the claim alone
+Coverage applicability — unclear which plan rule governs (e.g., does this specific procedure require prior auth under this specific plan)
+Coordination of benefits — another insurer is indicated but the split isn't resolvable from this claim alone
+Responsible-party conflict — inconsistent signals about whether the claim is accident- or employment-related, affecting who should even be paying
+Provider-pattern oddity — statistically unusual but not clearly fraudulent
+
+
+
+Recommendation logic: always Escalate — genuine ambiguity, by definition, can't be resolved by the system itself.
+
+
+Complex coverage math — five categories, also authored for this project (renamed from "Hard coverage math" — same category, public-facing name):
+
+
+Deductible-threshold crossing mid-claim
+Coordination-of-benefits split
+Annual/visit-cap crossing mid-claim
+Out-of-network combined with near-out-of-pocket-max
+Global-surgical-period overlap (requires checking against a related claim's surgery date — ties to the linked-claim feature)
+
+
+
+Recommendation logic: this is a calculation problem, not a decision problem — recommend Approve as calculated, showing the full breakdown transparently (Section 6) so the adjuster can verify the arithmetic. No confidence tag needed here at all — like coverage math generally, this is deterministic, not a judgment call. Exception: if one of the calculation's own inputs is missing (e.g., deductible-met status unknown), recategorize the claim as Incomplete data instead — "complex math" should never be used to describe a case that's really just missing an input.
+
+
+
+7d. Claim Data — Schema Convention and Real-World Source Material
+
+Format: structured JSON, not rendered form images (per the Explicit Non-Goals below). Field names should mirror the real CMS-1500/UB-04 box numbers and labels (e.g., box24_procedure_code, box67_principal_diagnosis) rather than generic field names — this preserves domain-authentic structure without taking on real document rendering/parsing as a separate, out-of-scope engineering problem.
+
+Where to find real, authoritative field values and structure (not just the blank form layout already covered in Section 2): CMS publishes companion guides for the underlying X12 837P (professional) and 837I (institutional) EDI transactions — the electronic-submission format that CMS-1500 and UB-04 data actually travels in — and several of these guides include literal filled example claim files (e.g., a "837P Claim File Example" figure showing real segment-level structure). These are in raw X12 EDI segment format, not the visual box-number layout — useful for realistic procedure/diagnosis code combinations and real-world claim structure, but values should be translated into this project's box-number JSON schema, not copied in EDI format directly.
+
+Instruction for CC: generate the 20-claim test set (per Section 10) as a separate JSON file (e.g., claims-seed-data.json), not embedded in this spec document — this document defines the schema and construction rules; the actual data is a separate, regenerable artifact (see Section 11's weekly reseed logic).
+
+
+8. Audit Log (Structural Requirement, Not a Feature)
+
+Every claim needs a visible history: every status change, override, escalation, denial — who did it, when, and why (where a reason was required). This is the connective tissue that makes bulk actions, status memory, and required-justification denials actually trustworthy as a system, rather than disconnected good ideas. Recognizable as standard in real enterprise claims/insurance software — its absence would be the clearest tell that this is a portfolio exercise rather than domain-literate work.
+
+
+9. Archival Logic
+
+Default menu view = active claims (Submitted/Flagged/Needs Approval/Escalated) + Resolved claims from the last 7–14 days.
+
+Older Resolved claims drop out of the default view but remain fully queryable ("show me claims approved in March") — never hard-deleted, just not cluttering the default working list. This keeps the interface honest: nothing is hidden permanently, but not everything is shown by default either.
+
+
+10. Test / Evaluation Data Set
+
+20 individual claim records, representing 15 distinct scenarios. Deliberately kept lean for the testing/iteration phase — a full production-feel demo (~100+ claims) is a later goal, but a large set makes running repeated experiments against prompt/logic changes slow and unwieldy. This smaller set is the genuine fixed test set to run against every revision; the larger volume comes after the architecture is proven.
+
+Clean (3 scenarios, 4 records):
+
+
+1 CMS-1500 only
+1 combo pair (CMS-1500 + UB-04, linked) — 2 records
+1 UB-04 only
+
+
+Ambiguous (2 scenarios, 3 records):
+
+
+1 CMS-1500 only
+1 combo pair — 2 records
+
+
+Missing data (2 scenarios, 3 records):
+
+
+1 CMS-1500 only
+1 combo pair — 2 records
+
+
+Complex coverage math (2 scenarios, 3 records):
+
+
+1 CMS-1500 only
+1 combo pair — 2 records
+
+
+Fraud (6 scenarios, 7 records) — mapped to FinCEN's five named typologies plus the volume-spike pattern:
+
+
+4 CMS-1500-only claims: phantom billing, unbundling, unnecessary/substandard care, double billing (duplicate line items within the CMS-1500's own service-line table)
+1 UB-04-only claim: upcoding — a Rev. Code/HCPCS line reflecting a higher care intensity than the admission details justify
+1 combo pair (2 records): a facility/professional documentation mismatch — the UB-04 facility claim reflects a higher level of care or longer stay than the linked CMS-1500 professional claim's own documentation supports. This pattern can only be caught by comparing two linked claims against each other, making it the sharpest test of the linked-claim-recognition feature.
+Volume spike (the sixth FinCEN-documented pattern) isn't a single-claim scenario — it's a property of the aggregate set. Construction instruction: reuse the same provider name across 2–3 of the CMS-1500 fraud claims, so the pattern is visible across the data without needing its own isolated example.
+
+
+Field-level construction guidance, using actual CMS-1500 and UB-04 box numbers:
+
+Fraud, CMS-1500:
+
+
+Phantom billing: a service line (Box 24) dated with no plausible supporting encounter
+Unbundling: multiple Box 24 line items using separate codes that are normally billed together as one
+Unnecessary/substandard care: Box 21 (diagnosis) doesn't logically support the intensity of the Box 24D procedure billed
+Double billing: two Box 24 line items with identical service date, code, and charge
+
+
+Fraud, UB-04:
+
+
+Upcoding: a Rev. Code/HCPCS line (boxes 42–49) reflecting a higher care intensity than the admission/Type of Bill (box 4) would justify
+
+
+Fraud, combo pair:
+
+
+Documentation mismatch: UB-04's admission/service details (boxes 6, 42-49) imply more extensive care than the linked CMS-1500's diagnosis/procedure (boxes 21, 24) supports
+
+
+Ambiguous, CMS-1500: Box 21 (diagnosis) vs. Box 24D (procedure) borderline-plausible mismatch; Box 23 (prior auth) blank on a procedure that sometimes requires it; Box 9/11d (other insurance) marked yes with no specifics given.
+
+Ambiguous, combo pair: Condition Codes (UB-04 boxes 18-28) marked in a way that's borderline-relevant to the claim; Occurrence Codes (31-34) present but unclear whether they trigger special handling.
+
+Missing data, CMS-1500: Box 33 (billing provider info) or Box 24J (rendering provider NPI) left blank.
+
+Missing data, combo pair: UB-04 Box 67 (principal diagnosis) or Box 76 (Attending NPI) left blank — both typically required.
+
+Complex math, CMS-1500: a multi-line Box 24 claim where the deductible is met partway through the line items, changing the coverage percentage mid-claim.
+
+Complex math, combo pair: UB-04 Value Codes (39-41) carrying deductible/coinsurance amounts that must be apportioned across multiple Rev. Code lines (42-49), or a multi-day inpatient stay where Serv. Units (box 46) × per-diem rate crosses an annual benefit-day cap partway through the stay.
+
+Data format: structured JSON, not rendered form images. Field names should mirror the real CMS-1500/UB-04 box numbers and labels (e.g. box24_procedure_code, box67_principal_diagnosis) rather than generic field names — this preserves domain-authentic structure without taking on real document-rendering/parsing as a separate, out-of-scope engineering problem.
+
+Data provenance: all claims, patients, and providers are fully synthetic. No real PII. Structural realism (real CMS-1500/UB-04 field layout, real ICD-10/CPT code categories using invented specific codes) without using any real person's data.
+
+11. Demo Data Lifecycle — Weekly Reseeding
+
+The problem this solves: if each claim's submission date is a fixed, hardcoded value, the SLA/urgency math (Section 5a) only makes sense on the day the data was written. A claim submitted "today" during initial testing will, a week later, look like it's had plenty of time; a month later, most of the set will have drifted into Overdue regardless of anything else about the claim. A hiring manager opening this link weeks after it was built would see a demo that looks broken or neglected — a graveyard of red Overdue flags — through no fault of the actual system, just because time passed and nobody remembered to regenerate the data.
+
+The fix: don't store fixed calendar dates. Derive each claim's submission date as an offset from whenever the data is generated, and regenerate automatically on a weekly cycle.
+
+Mechanism:
+
+
+Derive a seed value from the current ISO week number (e.g., 2026-W30).
+Feed that seed into a seeded random-number generator (a standard library such as seedrandom — deterministic output for a given seed, not true randomness).
+Use that seeded generator to produce the same 20 claims every time, with submitted_date computed as a relative offset from the real current timestamp (e.g., "2 hours ago," "18 days ago," "70 hours ago" for an urgent claim near its deadline) — chosen to produce a realistic spread across all urgency states (some fresh, some near-deadline, one or two genuinely Overdue).
+Because the seed is tied to the calendar week, the exact same claim set (same scenarios, same relative urgency) regenerates automatically every time the ISO week changes — no manual trigger, no scheduled job, no admin action required. The calendar itself is the trigger.
+
+
+Why this approach specifically, over the alternatives considered:
+
+
+Freezing a fixed date globally was rejected — it means the app lies to itself about the current date, and risks contradicting any other real timestamp displayed elsewhere in the interface.
+A manual "reset" button or scheduled Vercel Cron job were both considered and are viable, but add either a manual step to remember before every demo, or infrastructure (Cron, persistent storage with a reset function) that isn't necessary at this project's scale.
+The ISO-week-seed approach needs neither — it works identically whether running locally or live on Vercel, since it's a pure function of "what week is it," not tied to any hosting infrastructure or manual intervention.
+
+
+Honest tradeoff, accepted deliberately: any status changes, approvals, or escalations an adjuster clicked during a given week reset when the new week's seed generates a fresh set. For a portfolio/demo tool — where a visitor is exploring briefly, not running a persistent workflow across days — this is an acceptable, largely invisible tradeoff, not a limitation worth engineering around.
+
+Instruction for CC: generate the claim seed script so that submitted_date (and only submitted_date — no other field needs pre-generation) is computed as a relative offset from Date.now() at generation time, seeded deterministically by the current ISO week number, so the same scenarios and urgency spread regenerate automatically and consistently within any given week, both in local development and in production.
+
+Persistence model (decided 2026-07-26): pipeline output (evidence, confidence, recommendation) is cached per ISO week and shared across all visitors, since it depends only on claim data and the current week's seed — see the implementation note in Section 1. Adjuster actions — approvals, denials, escalations, overrides, audit log entries — are stored client-side (browser localStorage) instead, never written to a shared store. This keeps the two concerns cleanly separated: what the system found is the same for everyone in a given week; what a specific adjuster did with it is private to their own browser and resets with it.
+
+
+
+FinCEN, Advisory on Health Care Fraud Schemes Targeting Medicare, Medicaid, and Other Federal and State Health Care Benefit Programs (FIN-2026-A001, March 30, 2026) — source of the five named billing-fraud typologies and the billing-volume-spike pattern.
+NHCAA (National Health Care Anti-Fraud Association), Consumer Information page — source of the broader legal framing (intentional misrepresentation as the common thread across fraud types) and public fraud-cost estimates.
+Guidewire ClaimCenter (product screenshots, reviewed directly) — validated the worklist/severity-tag/audit-log/embedded-grounded-assistant patterns used throughout this spec. ProNavigator specifically confirmed the "cite the source document + include a disclaimer" pattern independently arrived at in this project's confidence-tagging design.
+Snapsheet, HealthEdge/HealthRules Payer — confirmed straight-through processing rates (up to 90%) and role-based, severity-tagged dashboard patterns.
+ERISA claims procedure regulations (72hr/15-day/30-day tiered deadlines) and state prompt-pay statutes — source for the simplified SLA model in Section 5a.
+
+
+
+Open Items / Not Yet Resolved
+
+
+ Router fallback behavior for ambiguous/broad natural-language queries
+ Whether bulk-approve re-verifies each claim live or trusts last-known status
+ Full Deny flow — confirmed to need justification, exact UI not yet speced
+ Whether this is adjuster-facing only, or has any secondary view (not currently planned, but worth confirming it stays adjuster-only on purpose, not by default)
+ Whether to add a distinct "Top 5 needing attention" module above the worklist, or rely solely on the default severity-sorted view (Section 7)
+ Embedding provider for RAG retrieval: local, self-hosted model vs. Voyage AI — undecided, to be resolved when the retrieval layer is actually built
+ API call batching strategy once the claim set grows past 20 (production goal, ~100+) — deferred until that phase
+ UI/visual design not yet started — being designed separately in Figma; this functional spec is intentionally ahead of the visual one
+
+
+
+Explicit Non-Goals (Scope Discipline)
+
+
+Not building a member/patient-facing view — this is adjuster-facing only, by design
+Not using real insurer fraud models or real coverage contracts — simplified, synthetic, structurally realistic only
+Not building full observability tooling (Phoenix, etc.) unless there's a specific reason to — a few trace markers are enough to demonstrate the concept
+Not rendering or storing attached documents (resubmitted forms, verification notes, scanned images) — a "missing-information hold" is represented as a data-field state on the claim itself (an incomplete required field), not as an external document to upload, store, or parse. Real document attachment/OCR is a separate, out-of-scope engineering problem.
+Not integrating with or simulating a real billing/reimbursement/payment system — an approved/denied/escalated claim's status change and audit log entry is the simulation of that downstream handoff, not a connection to an actual payment process.

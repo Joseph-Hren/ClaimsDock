@@ -18,7 +18,7 @@
       <span>Role: <b>Product direction, spec authorship, review</b></span>
       <span>Build: <b>Claude Code</b></span>
       <span>Stack: <b>Next.js, TypeScript, Anthropic API (tool-use + RAG)</b></span>
-      <span>Status: <b>Claims schema &amp; seed data complete — Phase 1 of 11</b></span>
+      <span>Status: <b>RAG corpora complete — Phase 2 of 11</b></span>
     </div>
   </div>
   </div>
@@ -84,12 +84,13 @@
           </div>
         </li>
 
-        <li class="session session--planned">
+        <li class="session session--done">
           <div class="session-rail"><div class="session-node"></div></div>
           <div class="session-body col">
-            <div class="session-head"><h3>Author the three RAG corpora</h3><span class="pill pill--planned">Planned</span></div>
+            <div class="session-head"><h3>Author the three RAG corpora</h3><span class="pill pill--done">Done</span></div>
             <p class="session-summary">content/corpora/</p>
-            <p>Condensed, medical-claims-scoped reference documents — coverage policy, fraud-indicator, deadline reference — each citing its real source without reproducing it at length.</p>
+            <p>Three condensed reference documents (~500–600 words each) plus a typed manifest for the retrieval layer to consume in Phase 4: <strong>Coverage &amp; Adjudication Policy</strong> (fully synthetic, in-house — coverage percentages, deductible logic, network rates, prior-auth rules, benefit caps), <strong>Fraud-Indicator Reference</strong>, and <strong>Regulatory Deadline Reference</strong> (ERISA's tiered deadlines plus state prompt-pay timing).</p>
+            <p>Before writing the fraud reference, a secondhand relay from a companion planning thread claimed the five billing-fraud category names (phantom billing, upcoding, unbundling, double billing, unnecessary/substandard care) came directly from FinCEN's FIN-2026-A001 advisory. Rather than build a citable document on that relay alone, fetched the advisory and NHCAA's consumer page directly. The volume-spike red flag and NHCAA's misrepresentation framing held up; the five category names did not — FinCEN's actual advisory centers on financial red flags (shell companies, ownership-change reimbursement spikes), consistent with its real mandate as a financial-crimes regulator rather than a medical-coding one. The terms themselves are real, just grounded elsewhere (OIG enforcement, DOJ False Claims Act settlements, CMS's National Correct Coding Initiative for unbundling specifically) — corrected the attribution in the corpus, in <code>project-spec.txt</code>, and in the workflow-visualization diagram's node copy, all three now citing sources verified directly rather than by relay. ERISA's own tiered deadlines (72hr/15-day/30-day) were checked the same way and held up exactly as specified, against DOL/EBSA guidance and the eCFR text — with one real addition worth folding in: each non-urgent tier gets a single notified extension (up to 15 or 30 more days), which wasn't in the original spec draft.</p>
           </div>
         </li>
 
@@ -217,7 +218,7 @@
         <tbody>
           <tr><td>Architecture &amp; build-process planning</td><td>Done — spec finalized, CLAUDE.md written</td></tr>
           <tr><td>Claims schema &amp; seed generator</td><td>Done — 20 claims, 15 scenarios, seeded date generator, validated</td></tr>
-          <tr><td>RAG corpora</td><td>Not started</td></tr>
+          <tr><td>RAG corpora</td><td>Done — 3 documents, sourcing independently verified</td></tr>
           <tr><td>Deterministic calculation layer</td><td>Not started</td></tr>
           <tr><td>RAG retrieval layer</td><td>Not started</td></tr>
           <tr><td>Evaluation pipeline</td><td>Not started</td></tr>

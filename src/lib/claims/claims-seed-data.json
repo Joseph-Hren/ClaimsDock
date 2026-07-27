@@ -14,6 +14,7 @@
         { "line": 2, "box24a_date_of_service": "2026-07-14", "box24b_place_of_service": "11", "box24d_procedure_code": "97140", "box24e_diagnosis_pointer": "A", "box24f_charge": 60.0, "box24g_units": 1, "box24j_rendering_provider_npi": "1720456391" }
       ],
       "box33_billing_provider": { "name": "Cascade Physical Therapy", "npi": "1720456391", "address": "410 Alder St, Portland, OR" },
+      "box19_additional_claim_information": "Patient tolerating home exercise program well; continuing established plan of care, no change in status.",
       "total_charge": 155.0,
       "sla_tier": "standard",
       "urgency_target": "mid",
@@ -57,6 +58,7 @@
       "box76_attending_provider_npi": "1366209284",
       "billing_provider_name": "Riverside Outpatient Surgical Center",
       "billing_provider_npi": "1699887701",
+      "box80_remarks": "Uncomplicated same-day laparoscopic procedure. Patient tolerated well, discharged per routine post-op protocol.",
       "total_charge": 4460.0,
       "sla_tier": "standard",
       "urgency_target": "fresh",
@@ -101,6 +103,7 @@
         { "line": 1, "box24a_date_of_service": "2026-07-19", "box24b_place_of_service": "11", "box24d_procedure_code": "20610", "box24e_diagnosis_pointer": "A", "box24f_charge": 240.0, "box24g_units": 1, "box24j_rendering_provider_npi": "1408817225" }
       ],
       "box33_billing_provider": { "name": "Dr. Adaeze Nwosu, MD (Orthopedics)", "npi": "1408817225", "address": "12 Foothill Medical Building, Beaverton, OR" },
+      "box19_additional_claim_information": "Pt mentions possible secondary coverage through spouse's employer plan; unconfirmed at time of visit.",
       "total_charge": 240.0,
       "sla_tier": "standard",
       "urgency_target": "mid",
@@ -145,6 +148,7 @@
       "box76_attending_provider_npi": "1590744812",
       "billing_provider_name": "Willamette Valley Regional Hospital",
       "billing_provider_npi": "1288650033",
+      "box80_remarks": "Pt reports fall occurred 'at the warehouse' per intake nursing note; family later stated the fall was at the patient's home. Occurrence code entered pending clarification.",
       "total_charge": 14600.0,
       "sla_tier": "standard",
       "urgency_target": "fresh",
@@ -291,6 +295,7 @@
         { "line": 1, "box24a_date_of_service": "2026-07-19", "box24b_place_of_service": "11", "box24d_procedure_code": "20610", "box24e_diagnosis_pointer": "A", "box24f_charge": 640.0, "box24g_units": 1, "box24j_rendering_provider_npi": "1922334455" }
       ],
       "box33_billing_provider": { "name": "Meridian Pain & Wellness Center", "npi": "1922334455", "address": "900 Industrial Way, Suite 4, Salem, OR" },
+      "box19_additional_claim_information": "No encounter note on file for this date of service; front-desk scheduling record shows patient did not check in.",
       "total_charge": 640.0,
       "sla_tier": "standard",
       "urgency_target": "mid",
@@ -330,6 +335,7 @@
         { "line": 1, "box24a_date_of_service": "2026-07-06", "box24b_place_of_service": "11", "box24d_procedure_code": "96365", "box24e_diagnosis_pointer": "A", "box24f_charge": 385.0, "box24g_units": 1, "box24j_rendering_provider_npi": "1355908214" }
       ],
       "box33_billing_provider": { "name": "Valleybrook Urgent Care", "npi": "1355908214", "address": "22 Parkway Drive, Corvallis, OR" },
+      "box19_additional_claim_information": "Pt reports nasal congestion and sore throat x2 days, low-grade temp only, no respiratory distress on exam. Discharged with OTC symptom-management advice.",
       "total_charge": 385.0,
       "sla_tier": "standard",
       "urgency_target": "breached",
@@ -374,6 +380,7 @@
       "box76_attending_provider_npi": "1633882910",
       "billing_provider_name": "Northgate Emergency Medical Center",
       "billing_provider_npi": "1855023467",
+      "box80_remarks": "Patient alert and ambulatory throughout ED course; vitals stable, discharged home same-day in stable condition.",
       "total_charge": 4200.0,
       "sla_tier": "urgent",
       "urgency_target": "near_deadline",
@@ -417,6 +424,7 @@
       "box76_attending_provider_npi": "1744903358",
       "billing_provider_name": "Bay Area Regional Hospital",
       "billing_provider_npi": "1377502246",
+      "box80_remarks": "Patient remained hemodynamically stable throughout admission; transferred to step-down/med-surg level care on day 2, ambulating independently by day 3.",
       "total_charge": 21000.0,
       "sla_tier": "standard",
       "urgency_target": "mid",

@@ -18,12 +18,12 @@
       <span>Role: <b>Product direction, spec authorship, review</b></span>
       <span>Build: <b>Claude Code</b></span>
       <span>Stack: <b>Next.js, TypeScript, Anthropic API (tool-use + RAG)</b></span>
-      <span>Status: <b>RAG corpora complete — Phase 2 of 11</b></span>
+      <span>Status: <b>Deterministic calculation layer complete — Phase 3 of 11</b></span>
     </div>
     <div class="progress-rail" aria-hidden="true">
       <div class="progress-node-wrap"><div class="progress-node progress-node--done">1</div><div class="progress-line progress-line--done"></div></div>
-      <div class="progress-node-wrap"><div class="progress-node progress-node--done">2</div><div class="progress-line"></div></div>
-      <div class="progress-node-wrap"><div class="progress-node">3</div><div class="progress-line"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node progress-node--done">2</div><div class="progress-line progress-line--done"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node progress-node--done">3</div><div class="progress-line"></div></div>
       <div class="progress-node-wrap"><div class="progress-node">4</div><div class="progress-line"></div></div>
       <div class="progress-node-wrap"><div class="progress-node">5</div><div class="progress-line"></div></div>
       <div class="progress-node-wrap"><div class="progress-node">6</div><div class="progress-line"></div></div>
@@ -33,7 +33,7 @@
       <div class="progress-node-wrap"><div class="progress-node progress-node--done">10</div><div class="progress-line"></div></div>
       <div class="progress-node-wrap"><div class="progress-node">11</div></div>
     </div>
-    <p class="progress-caption">3 of 11 phases done — Phase 10 (workflow visualization) was built out of order on purpose, not gated on the others.</p>
+    <p class="progress-caption">4 of 11 phases done — Phase 10 (workflow visualization) was built out of order on purpose, not gated on the others.</p>
   </div>
   </div>
 </header>
@@ -108,12 +108,16 @@
           </div>
         </li>
 
-        <li class="session session--planned">
+        <li class="session session--done">
           <div class="session-rail"><div class="session-node"></div></div>
           <div class="session-body col">
-            <div class="session-head"><h3>Deterministic calculation layer</h3><span class="pill pill--planned">Planned</span></div>
-            <p class="session-summary">lib/rules/</p>
-            <p>Severity, SLA/deadline math, coverage math, the category-plus-confidence-tier action lookup — pure functions, unit tested, no API calls, built and verified before any model call touches them.</p>
+            <div class="session-head"><h3>Deterministic calculation layer</h3><span class="pill pill--done">Done</span></div>
+            <p class="session-summary">src/lib/rules/ · 31 tests, 6 files, all passing</p>
+            <p>Five pure functions, no API calls: <code>severity.ts</code> (dollar band × SLA-window escalation, medical-necessity bump, breach override), <code>sla.ts</code> (percent-of-deadline-window math), <code>coverage.ts</code> (deductible/network-aware coverage math, verified against the spec's own worked example — $1,140 billed → $912 covered, exactly), <code>action-lookup.ts</code> (the category+confidence → action table), and <code>status.ts</code>. Vitest installed as the test runner.</p>
+            <p>Planning this one surfaced a real design question worth recording: is "disputed medical necessity" — an input severity needs — something to extract from messy claim prose, or something the deterministic layer should just be handed as a clean field? Concluded it's neither exactly — it's a judgment the Pipeline's Analysis call (Phase 5) has to make by reasoning over the claim, the same way it judges the unnecessary/substandard-care fraud category. Rather than pre-bake that judgment as a boolean now, <code>computeSeverity()</code> takes it as an explicit parameter, sourced from <code>_testMeta</code> as a stand-in until Phase 5 exists — same pattern already used for the missing-info SLA-hold pause (<code>temporary-hold.ts</code>, explicitly marked for deletion once Phase 7 lands).</p>
+            <p>Two structured reference datasets added alongside the rule modules — <code>network-directory.json</code> and <code>member-accumulators.json</code> — modeling something true of real claims processing: network status and deductible balance both live in separate systems (a payer's network directory, a member's benefit accumulator), never on the claim form itself, so looking them up rather than parsing them off the claim is the domain-accurate design, not a shortcut.</p>
+            <p>Separately, added CMS-1500's real Box 19 ("Additional Claim Information") and UB-04's Box 80 ("Remarks") — genuine free-text fields on both real forms — to eight of the twenty seed claims, with realistic clinical shorthand for Phase 5 to eventually read and reason over. Deliberately included on two clean claims as well as the ambiguous/fraud ones, so the mere presence of a note is never itself a tell.</p>
+            <p><code>coverage-policy.md</code> is now generated, not hand-maintained: <code>coverage-constants.ts</code> is the single source of truth, and <code>scripts/generate-coverage-policy.ts</code> renders the citable prose document's tables from it, so the numbers Anchor cites and the numbers the calculation actually uses can't quietly drift apart.</p>
           </div>
         </li>
 
@@ -235,7 +239,7 @@
           <tr><td>Architecture &amp; build-process planning</td><td>Done — spec finalized, CLAUDE.md written</td></tr>
           <tr><td>Claims schema &amp; seed generator</td><td>Done — 20 claims, 15 scenarios, seeded date generator, validated</td></tr>
           <tr><td>RAG corpora</td><td>Done — 3 documents, sourcing independently verified</td></tr>
-          <tr><td>Deterministic calculation layer</td><td>Not started</td></tr>
+          <tr><td>Deterministic calculation layer</td><td>Done — 31 tests passing, coverage-policy.md now generated from constants</td></tr>
           <tr><td>RAG retrieval layer</td><td>Not started</td></tr>
           <tr><td>Evaluation pipeline</td><td>Not started</td></tr>
           <tr><td>Interactive router &amp; Anchor</td><td>Not started</td></tr>

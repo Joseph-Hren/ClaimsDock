@@ -1,0 +1,21 @@
+{
+  "providers": [
+    { "provider_npi": "1720456391", "provider_name": "Cascade Physical Therapy", "network_status": "in-network" },
+    { "provider_npi": "1366209284", "provider_name": "Dr. Priya Shenoy, MD (General Surgery)", "network_status": "in-network" },
+    { "provider_npi": "1699887701", "provider_name": "Riverside Outpatient Surgical Center", "network_status": "in-network" },
+    { "provider_npi": "1855023467", "provider_name": "Northgate Emergency Medical Center", "network_status": "in-network" },
+    { "provider_npi": "1408817225", "provider_name": "Dr. Adaeze Nwosu, MD (Orthopedics)", "network_status": "in-network" },
+    { "provider_npi": "1590744812", "provider_name": "Dr. Grace Palladino, MD (Internal Medicine)", "network_status": "in-network" },
+    { "provider_npi": "1288650033", "provider_name": "Willamette Valley Regional Hospital", "network_status": "in-network" },
+    { "provider_npi": "1477392058", "provider_name": "Lakeview Dermatology Associates", "network_status": "in-network" },
+    { "provider_npi": "1633209547", "provider_name": "Dr. Foster Langley, MD (Pulmonology)", "network_status": "in-network" },
+    { "provider_npi": "1244557788", "provider_name": "Eugene Community Hospital", "network_status": "in-network" },
+    { "provider_npi": "1911023845", "provider_name": "Dr. Renee Kowalski, MD (Family Medicine)", "network_status": "in-network" },
+    { "provider_npi": "1477610239", "provider_name": "Dr. Imani Osei, MD (Pulmonology)", "network_status": "in-network" },
+    { "provider_npi": "1200558842", "provider_name": "Rogue Valley Medical Center", "network_status": "in-network" },
+    { "provider_npi": "1922334455", "provider_name": "Meridian Pain & Wellness Center", "network_status": "in-network" },
+    { "provider_npi": "1355908214", "provider_name": "Valleybrook Urgent Care", "network_status": "in-network" },
+    { "provider_npi": "1744903358", "provider_name": "Dr. Marcus Feld, MD (Internal Medicine)", "network_status": "in-network" },
+    { "provider_npi": "1377502246", "provider_name": "Bay Area Regional Hospital", "network_status": "out-of-network" }
+  ]
+}

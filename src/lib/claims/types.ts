@@ -72,6 +72,12 @@ export interface CMS1500Claim {
   box23_prior_auth_number: string | null;
   box24_service_lines: CMS1500ServiceLine[];
   box33_billing_provider: BillingProvider;
+  // Box 19 is a real free-text field on the CMS-1500 ("Additional Claim
+  // Information") — the one place genuine unstructured clinical shorthand
+  // legitimately lives on this form. Present only where it's actually
+  // relevant to the scenario; the Pipeline's Analysis call (Phase 5) is
+  // meant to read and reason over this, not just the coded fields.
+  box19_additional_claim_information?: string;
   total_charge: number;
   sla_tier: SlaTier;
   urgency_target: UrgencyTarget;
@@ -112,6 +118,10 @@ export interface UB04Claim {
   box42_49_revenue_lines: UB04RevenueLine[];
   box67_principal_diagnosis: string | null; // null = deliberately missing
   box76_attending_provider_npi: string | null; // null = deliberately missing
+  // Box 80 is UB-04's real free-text "Remarks" field — the institutional-claim
+  // counterpart to CMS-1500's Box 19. Same purpose: genuine unstructured
+  // content for the Pipeline to read, present only where relevant.
+  box80_remarks?: string;
   billing_provider_name: string;
   billing_provider_npi: string;
   total_charge: number;
@@ -136,4 +146,23 @@ export interface ProviderHistoryEntry {
   trailing_6mo_avg_monthly_claims: number;
   current_month_claims: number;
   note: string;
+}
+
+// Neither of these lives on a real claim form — network status comes from
+// cross-referencing the billing provider's NPI against the payer's network
+// directory, and remaining deductible comes from the member's own benefit
+// accumulator. Both are separate systems in real claims processing, not
+// fields to extract from the claim itself — modeled here the same way.
+export interface NetworkDirectoryEntry {
+  provider_npi: string;
+  provider_name: string;
+  network_status: 'in-network' | 'out-of-network';
+}
+
+export interface MemberAccumulatorEntry {
+  member_id: string;
+  plan_year: number;
+  deductible_individual_limit: number;
+  deductible_remaining: number; // as of the reference point below
+  as_of: string; // YYYY-MM-DD — accumulators are a snapshot, not live data
 }

@@ -1,0 +1,19 @@
+{
+  "members": [
+    { "member_id": "MBR-4471029", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 500, "as_of": "2026-07-20" },
+    { "member_id": "MBR-5502187", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 0, "as_of": "2026-07-20" },
+    { "member_id": "MBR-3390155", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 500, "as_of": "2026-07-20" },
+    { "member_id": "MBR-2287740", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 320, "as_of": "2026-07-20" },
+    { "member_id": "MBR-6641820", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 0, "as_of": "2026-07-20" },
+    { "member_id": "MBR-1129384", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 500, "as_of": "2026-07-20" },
+    { "member_id": "MBR-7783921", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 0, "as_of": "2026-07-20" },
+    { "member_id": "MBR-9982104", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 150, "as_of": "2026-07-20" },
+    { "member_id": "MBR-3321987", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 0, "as_of": "2026-07-20" },
+    { "member_id": "MBR-4456218", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 260, "as_of": "2026-07-20" },
+    { "member_id": "MBR-5567340", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 500, "as_of": "2026-07-20" },
+    { "member_id": "MBR-6612903", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 500, "as_of": "2026-07-20" },
+    { "member_id": "MBR-7723014", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 405, "as_of": "2026-07-20" },
+    { "member_id": "MBR-8814027", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 500, "as_of": "2026-07-20" },
+    { "member_id": "MBR-9925617", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 0, "as_of": "2026-07-20" }
+  ]
+}

@@ -2,7 +2,7 @@ Claims copilot spec · MDClaimsDock — Project Spec
 
 Living document. Update as decisions get made or revised.
 
-Status: Architecture defined. Naming locked: platform = ClaimsDock, embedded assistant panel = Anchor. Pipeline API-call structure, persistence model, and RAG mechanism decided (see inline implementation notes below, added 2026-07-26). Companion CLAUDE.md build-process document created alongside this spec. Phase 1 (claims schema, 20-claim seed set, seeded date generator) complete and pushed. FinCEN/NHCAA sourcing independently verified and corrected 2026-07-27 (see Section 2 and the closing citations). Next: author the three RAG corpora (Phase 2).
+Status: Architecture defined. Naming locked: platform = ClaimsDock, embedded assistant panel = Anchor. Pipeline API-call structure, persistence model, and RAG mechanism decided (see inline implementation notes below, added 2026-07-26). Companion CLAUDE.md build-process document created alongside this spec. Phases 1–4 complete and pushed (claims schema/seed data, RAG corpora with independently-verified sourcing, deterministic calculation layer, RAG retrieval with local embeddings + hybrid scoring) — Phase 10 (workflow visualization) also complete, built out of order on purpose. Status taxonomy revised 2026-07-27 from 5 to 7 values (added Denied and Additional Info Requested; see Section 7a) after a multi-round logic review against the deterministic layer's action-lookup table. Next: Phase 5, the Evaluation Pipeline's actual API calls.
 
 
 The Core Thesis
@@ -37,7 +37,7 @@ This pipeline runs automatically for all claims the moment they enter the system
 
 Implementation note — API call count and batching (decided 2026-07-26): the pipeline runs as exactly two model API calls total per run, each batched across every claim in the set (not one call per claim). Call 1 (Analysis) evaluates all claims together and returns evidence plus a proposed category (fraud/ambiguous/missing-data/complex-math/clean) for each — no tier, no recommendation. Call 2 (Confidence judge) is shown only Call 1's evidence, blind to its reasoning, and for every claim: assigns the confidence tier, then drafts the recommendation's phrasing and citation. This section's original draft never fixed Recommendation to a specific call number — folding it into Call 2 resolves that gap rather than deviating from the isolation rationale in Section 3, since drafting a recommendation from an already-fixed tier isn't the model grading its own evidence-finding.
 
-Two inputs to this pipeline are deliberately NOT model output: severity (Section 7b) and the category-plus-tier → action lookup (Section 7c) are both computed in code from hard data, never asked of the model. Initial status (flagged vs. clean) is likewise derived from whether Call 1's evidence is non-empty, not separately judged.
+Two inputs to this pipeline are deliberately NOT model output: severity (Section 7b) and the category-plus-tier → action lookup (Section 7c) are both computed in code from hard data, never asked of the model. Initial status (flagged vs. no-flags) is likewise derived deterministically — corrected 2026-07-27: NOT from whether Call 1's evidence is non-empty (an earlier draft of this note said so, but that's wrong — a complex-math or non-material-missing-data claim has non-empty evidence too, yet should still start "no flags," since Approve is still reachable for both). The real rule is category-based: fraud, ambiguous, and material-missing-data start "Submitted, flagged" (Approve is never their eventual action); clean, complex-math, and non-material-missing-data start "Submitted, no flags" (Approve is still reachable). See Section 7a for the full status taxonomy and transition map.
 
 For the 20-claim test set, this means 2 total API calls per pipeline run, not 40. Pipeline output (evidence, confidence, recommendation) is a property of the claim data and the current ISO-week seed, not of who's viewing it — so it's computed once per ISO week and cached/shared across every visitor, recomputed only when the week's seed changes (see Section 11). Adjuster actions (approve/deny/escalate/edit, audit log entries) are the opposite — stored client-side, per browser, never written back to the shared pipeline cache. This is deliberate: a new visitor always sees the full, untouched 20-claim queue regardless of what any other visitor has clicked, at zero infrastructure cost.
 
@@ -149,6 +149,7 @@ Approve as recommended
 Approve with edit (opens override field — see Coverage Math below)
 Escalate for review
 Deny — requires a justification, same discipline as override (not yet fully speced — see Open Items)
+Request Additional Info — only available (and only makes sense) on a material missing-data claim. Confirms the system's hold recommendation is correct: the human agrees information is genuinely needed, rather than overriding straight to Approve. This is a real, distinct human decision, not an automatic system action — added 2026-07-27, see Section 7a.
 
 
 Feedback scoping: if an adjuster edits one field (e.g., dollar amount), the system must apply that single correction without silently re-running the full analysis or re-pulling the record from scratch. (Directly modeled on a flaw caught in course material — feedback must be scoped to the specific step it applies to.)
@@ -158,7 +159,7 @@ Feedback scoping: if an adjuster edits one field (e.g., dollar amount), the syst
 
 Status = lifecycle position. Separate axis from both confidence and severity (confidence = what the system found; severity = how much is at stake; status = where the claim is in the pipeline).
 
-Full, current status list lives in Section 7a. Note: an earlier draft of this spec treated "Overdue" as a sixth status value — this was revised. Deadline breach is now handled entirely as a severity input (Section 7b), not a status; status stays a clean 5-value lifecycle field.
+Full, current status list lives in Section 7a — 7 values as of 2026-07-27 (revised up from 5; see Section 7a for the two additions and why they pass a different test than the one below). Note: an earlier draft of this spec treated "Overdue" as a sixth status value — this was revised. Deadline breach is now handled entirely as a severity input (Section 7b), not a status; a value is only added to this taxonomy when it carries real, non-redundant information (lifecycle position genuinely different from what severity/confidence/category/audit-log already capture), not just because an outcome exists.
 
 Status badge is the fastest-scannable element in the list view — an adjuster triaging a queue should be able to sort by status color before reading a single sentence.
 
@@ -262,17 +263,25 @@ Locked: platform is ClaimsDock, embedded assistant panel is Anchor.
 Anchor is the name for the panel modeled on Guidewire ClaimCenter's ProNavigator — an adjuster asks a free-text question about a claim or the policy behind it, gets a plain-language answer, with the source document cited by name and an explicit disclaimer that the answer is grounded in official documents and should be confirmed before acting on it. The name fits the platform's nautical logic (ClaimsDock) and is functionally accurate: an anchor is the thing that keeps something tethered to solid ground rather than drifting — exactly the job this panel does by grounding every answer in a real, citable policy document instead of an invented one.
 
 
-7a. Status Taxonomy — Full List (Updated)
+7a. Status Taxonomy — Full List (revised 2026-07-27 — 7 values, up from 5)
 
+Two additions since the original 5-value list — Denied and Additional Info Requested — both passed the same test that rejected a 6th "Overdue" status: does this carry real, non-redundant information distinct from severity/confidence/category/audit-log, and does it change worklist/archival behavior in a way the existing values can't? Both do; "Overdue" didn't (severity already covers it).
 
-Submitted, no flags — clean, no coverage ambiguity
-Submitted, flagged — analysis found something; confidence-and-reason card becomes relevant
-Needs approval — recommendation drafted, sitting at the human gate
-Escalated — kicked upward past this system's authority
-Resolved — approved, denied, or otherwise closed, final action logged
+Submitted, no flags — set immediately by category alone (Call 1), before any confidence tier exists. Applies to clean, complex-math, and non-material-missing-data — the three categories where Approve is still a reachable outcome.
 
+Submitted, flagged — set immediately by category alone (Call 1). Applies to fraud, ambiguous, and material-missing-data — the three categories where Approve is never the eventual action. This is not a transitional stage toward "Needs Approval"; a flagged claim stays flagged until a human actually acts on it (Deny, Escalate, or Additional Info Requested — or Resolved, if a human overrides the recommendation and approves it anyway).
 
-(A claim past its SLA deadline does not get a sixth status — it stays in whichever of the above it's actually in, while its severity is forced to Critical. See Sections 5a and 7b.)
+Needs Approval — reached only from "Submitted, no flags." Triggered when the confidence judge returns Suspected or Uncertain on an otherwise-clean claim, or unconditionally for complex-math (which never receives a confidence tag at all — Section 7c). Semantically: "we recommend approving this, a human just needs to confirm" — never a Deny/Escalate case.
+
+Additional Info Requested — reached only from "Submitted, flagged," and only for a material-missing-data claim. Set when a human reviews the hold and confirms the information is genuinely needed (the "Request Additional Info" human-gate action, Section 4) — not automatic. Terminal in this system: there is no real document-intake mechanism (see Explicit Non-Goals) for the missing field to ever actually arrive, so treating this as an ongoing "active" status would misrepresent what the system can do. A human could instead decide enough information is already present and override straight to Resolved.
+
+Denied — reached from "Submitted, flagged" or "Needs Approval" when a human clicks Deny. Kept distinct from Resolved because denial carries real, asymmetric weight a plain approval doesn't — ERISA's own claims-procedure rules require a "full and fair review" specifically around adverse benefit determinations (appeal rights, stated reasons), and Section 4 already requires a justification for Deny, the same discipline as an override.
+
+Escalated — kicked upward past this system's authority. Reached from "Submitted, flagged" or "Needs Approval," whether by explicit human action or the system's always-escalate rule for the Ambiguous category (Section 7c).
+
+Resolved — the terminal status for any approval, however it's reached: auto-approval from "Submitted, no flags" (High Confidence or Confident), or a human clicking Approve as recommended / Approve with edit from any other status, including one overriding a Deny, Escalate, or Additional-Info recommendation.
+
+(A claim past its SLA deadline does not get its own status — it stays in whichever of the above it's actually in, while its severity is forced to Critical. See Sections 5a and 7b.)
 
 7b. Severity Taxonomy — Full List, With Concrete Metrics
 
@@ -358,9 +367,9 @@ Every claim needs a visible history: every status change, override, escalation, 
 
 9. Archival Logic
 
-Default menu view = active claims (Submitted/Flagged/Needs Approval/Escalated) + Resolved claims from the last 7–14 days.
+Default menu view = active claims (Submitted no flags/Submitted flagged/Needs Approval/Escalated) + closed claims (Resolved, Denied, Additional Info Requested) from the last 7–14 days.
 
-Older Resolved claims drop out of the default view but remain fully queryable ("show me claims approved in March") — never hard-deleted, just not cluttering the default working list. This keeps the interface honest: nothing is hidden permanently, but not everything is shown by default either.
+Older closed claims — Resolved, Denied, or Additional Info Requested — drop out of the default view but remain fully queryable ("show me claims approved in March," "show me denied claims from last week") — never hard-deleted, just not cluttering the default working list. Denied and Additional Info Requested are grouped with Resolved here, not with the active statuses, since none of the three can ever change further within this system (open item: whether Denied specifically should age out on the same 7–14 day window as a plain approval, given a real denial would typically open an appeal window — not yet resolved, default assumption is the same window applies to all three until decided otherwise). This keeps the interface honest: nothing is hidden permanently, but not everything is shown by default either.
 
 
 10. Test / Evaluation Data Set
@@ -491,9 +500,9 @@ Open Items / Not Yet Resolved
  Full Deny flow — confirmed to need justification, exact UI not yet speced
  Whether this is adjuster-facing only, or has any secondary view (not currently planned, but worth confirming it stays adjuster-only on purpose, not by default)
  Whether to add a distinct "Top 5 needing attention" module above the worklist, or rely solely on the default severity-sorted view (Section 7)
- Embedding provider for RAG retrieval: local, self-hosted model vs. Voyage AI — undecided, to be resolved when the retrieval layer is actually built
  API call batching strategy once the claim set grows past 20 (production goal, ~100+) — deferred until that phase
  UI/visual design not yet started — being designed separately in Figma; this functional spec is intentionally ahead of the visual one
+ Whether Denied claims should age out of the default worklist view on the same 7–14 day window as Resolved/Additional Info Requested (Section 9), or stay active longer given a real denial typically opens an appeal window — default assumption for now is the same window applies to all three
 
 
 

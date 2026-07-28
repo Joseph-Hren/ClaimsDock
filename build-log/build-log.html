@@ -18,7 +18,7 @@
       <span>Role: <b>Product direction, spec authorship, review</b></span>
       <span>Build: <b>Claude Code</b></span>
       <span>Stack: <b>Next.js, TypeScript, Anthropic API (tool-use + RAG)</b></span>
-      <span>Status: <b>RAG retrieval layer complete — Phase 4 of 11</b></span>
+      <span>Status: <b>Phase 4 of 11 done; status taxonomy corrected (7 values, up from 5)</b></span>
     </div>
     <div class="progress-rail" aria-hidden="true">
       <div class="progress-node-wrap"><div class="progress-node progress-node--done">1</div><div class="progress-line progress-line--done"></div></div>
@@ -134,6 +134,21 @@
               <li>The underlying dilution problem remained, so added the standard mitigation: hybrid scoring, blending embedding similarity (70%) with a lightweight keyword-overlap signal (30%) — the industry-standard answer to exactly this weakness in pure embedding search. That recovered the ERISA tiers chunk to 2nd place (previously absent from the top 6 entirely). One query ("what counts as upcoding") still didn't fully resolve — a competing chunk happens to contain the literal word "upcoding" too — but the correct chunk was already within the top 2 there regardless, and default <code>k</code> was bumped to 4 for margin, which costs nothing at this corpus size.</li>
             </ul>
             <p>Left deliberately unresolved: retrieval ranking isn't perfect, and won't be tuned further at this scale — the practical backstop is that Phase 6 feeds several top-k chunks to Claude for actual answer synthesis, not just the single top-ranked one, so imperfect ranking within a small margin doesn't mean a wrong answer.</p>
+          </div>
+        </li>
+
+        <li class="session session--done">
+          <div class="session-rail"><div class="session-node"></div></div>
+          <div class="session-body col">
+            <div class="session-head"><h3>Status taxonomy correction</h3><span class="pill pill--done">Done</span></div>
+            <p class="session-summary">project-spec.txt · src/lib/rules/status.ts · workflow diagram — cross-cutting, not a numbered phase</p>
+            <p>A review of the status taxonomy (project-spec.txt Section 7a) against the deterministic layer already built in Phase 3 surfaced a real bug in the spec itself, not just an ambiguity: the original implementation note said initial status was "derived from whether Call 1's evidence is non-empty." That rule is wrong — a complex-math claim (a detected deductible crossing) or a non-material-missing-data claim (a named missing field) both produce non-empty evidence, yet both need to stay "Submitted, no flags," since Approve is still a reachable action for each. The correct rule is category-based: fraud, ambiguous, and material-missing-data start flagged (Approve is never their eventual action); clean, complex-math, and non-material-missing-data start unflagged. <code>status.ts</code> was rewritten accordingly — <code>deriveInitialStatus()</code> now takes category (and materiality, for missing-data) instead of an evidence count.</p>
+            <p>Working through the taxonomy also surfaced two genuine gaps, not just clarifications:</p>
+            <ul>
+              <li><strong>Denied</strong> was missing as its own status — the original 5-value list folded every closed outcome into "Resolved." Adding it back is principled, not just more status-proliferation: it passes the same test that got a 6th "Overdue" status rejected earlier (Section 5a) — does it carry real, non-redundant information? Denial carries real regulatory weight an approval doesn't (ERISA requires a "full and fair review" specifically around adverse benefit determinations), and Section 4 already singles out Deny as needing a justification. Approved stayed folded into the generic "Resolved," on purpose — there wasn't a matching asymmetric justification for splitting that one out too.</li>
+              <li><strong>Additional Info Requested</strong> — a material missing-data hold was previously modeled as just a clock-pause with no visible status of its own, implying the claim would eventually get re-evaluated once the missing field arrived. But this system has no real document-intake mechanism (an explicit Non-Goal) for that field to ever actually arrive — so calling it anything other than terminal would misrepresent what the system can do. Added as its own status, reached only from "Submitted, flagged," only when a human explicitly confirms the hold is warranted rather than overriding straight to Approve — which also surfaced that Section 4's human-gate action list was missing a fifth action ("Request Additional Info") that Section 7c had already been assuming existed.</li>
+            </ul>
+            <p>Status is now 7 values, up from 5 — each addition justified individually against the same non-redundancy test, not accepted by default. <code>project-spec.txt</code> Sections 1, 4, 7a, and 9 all updated; the workflow-visualization diagram's Taxonomies and Human Gate node copy updated and republished to match; <code>status.ts</code>'s type expanded to the full 7-value shape even though only 2 are producible by code today, so Phases 6/7 fill in an already-correct shape rather than rediscovering one.</p>
           </div>
         </li>
 

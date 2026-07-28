@@ -289,9 +289,9 @@ g.node:hover .node-box { filter:drop-shadow(0 4px 7px rgba(0,0,0,0.20)); }
       <p>Measures how directly evidence supports the conclusion reached — not a bare probability. Never changes severity; only gates auto-approval and what a human sees. Shown only at the card level, never in the list view.</p>`},
 
     { id:'statusTax', cluster:'taxonomy', x:1170, y:600, w:190, h:74, kind:'Taxonomy',
-      title:'Status taxonomy', sub:'5 lifecycle values',
-      detail:`<ul><li>Submitted, no flags</li><li>Submitted, flagged</li><li>Needs approval</li><li>Escalated</li><li>Resolved</li></ul>
-      <p>Pure lifecycle position — independent of confidence and severity. An SLA breach never adds a 6th status; it forces severity to Critical instead.</p>`},
+      title:'Status taxonomy', sub:'7 lifecycle values',
+      detail:`<ul><li>Submitted, no flags — clean/complex-math/non-material-missing, set by category alone</li><li>Submitted, flagged — fraud/ambiguous/material-missing, set by category alone; stays flagged until a human acts</li><li>Needs Approval — from "no flags" only, on low-confidence clean or complex-math</li><li>Additional Info Requested — from "flagged" only, human-confirmed material hold; terminal, since this system has no real intake path for the info to arrive</li><li>Denied — from "flagged" or "Needs Approval"</li><li>Escalated — from "flagged" or "Needs Approval"</li><li>Resolved — any approval, however reached</li></ul>
+      <p>Pure lifecycle position — independent of confidence and severity. Revised 2026-07-27 from 5 to 7 values: Denied and Additional Info Requested both earned their place by the same test that rejected a 6th "Overdue" status — real, non-redundant information, not just an outcome that exists. An SLA breach still never adds its own status; it forces severity to Critical instead.</p>`},
 
     { id:'severityTax', cluster:'taxonomy', x:1170, y:700, w:190, h:80, kind:'Taxonomy',
       title:'Severity taxonomy', sub:'$ band × SLA % remaining',
@@ -308,8 +308,8 @@ g.node:hover .node-box { filter:drop-shadow(0 4px 7px rgba(0,0,0,0.20)); }
       detail:`<p>A claim auto-approves with no click required <em>only if</em> status is "Submitted, no flags" AND confidence is High Confidence or Confident. Clean-but-Suspected/Uncertain still surfaces for review — not because something's wrong, but because the system isn't fully sure nothing is.</p>`},
 
     { id:'actions', cluster:'humangate', x:1420, y:580, w:200, h:92, kind:'Human gate',
-      title:'Human actions', sub:'Approve · Approve+Edit · Escalate · Deny',
-      detail:`<p>Every other recommendation pauses here for explicit approval. Approve with edit opens the coverage-math override field (requires a logged one-line justification). Deny requires justification too.</p>
+      title:'Human actions', sub:'Approve · Approve+Edit · Escalate · Deny · Request Info',
+      detail:`<p>Every other recommendation pauses here for explicit approval. Approve with edit opens the coverage-math override field (requires a logged one-line justification). Deny requires justification too. Request Additional Info is only available on a material missing-data claim — it's the human confirming the hold is genuinely correct, not an automatic system action (added 2026-07-27, alongside the Denied and Additional Info Requested statuses).</p>
       <p>Neither the Pipeline nor the Router ever finalizes a status change themselves — only a button click, or a natural-language command mapped one-to-one to that same function, actually executes.</p>`},
 
     { id:'auditLog', cluster:'humangate', x:1420, y:700, w:200, h:68, kind:'Record',

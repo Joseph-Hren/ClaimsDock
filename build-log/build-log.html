@@ -18,13 +18,13 @@
       <span>Role: <b>Product direction, spec authorship, review</b></span>
       <span>Build: <b>Claude Code</b></span>
       <span>Stack: <b>Next.js, TypeScript, Anthropic API (tool-use + RAG)</b></span>
-      <span>Status: <b>Deterministic calculation layer complete — Phase 3 of 11</b></span>
+      <span>Status: <b>RAG retrieval layer complete — Phase 4 of 11</b></span>
     </div>
     <div class="progress-rail" aria-hidden="true">
       <div class="progress-node-wrap"><div class="progress-node progress-node--done">1</div><div class="progress-line progress-line--done"></div></div>
       <div class="progress-node-wrap"><div class="progress-node progress-node--done">2</div><div class="progress-line progress-line--done"></div></div>
-      <div class="progress-node-wrap"><div class="progress-node progress-node--done">3</div><div class="progress-line"></div></div>
-      <div class="progress-node-wrap"><div class="progress-node">4</div><div class="progress-line"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node progress-node--done">3</div><div class="progress-line progress-line--done"></div></div>
+      <div class="progress-node-wrap"><div class="progress-node progress-node--done">4</div><div class="progress-line"></div></div>
       <div class="progress-node-wrap"><div class="progress-node">5</div><div class="progress-line"></div></div>
       <div class="progress-node-wrap"><div class="progress-node">6</div><div class="progress-line"></div></div>
       <div class="progress-node-wrap"><div class="progress-node">7</div><div class="progress-line"></div></div>
@@ -33,7 +33,7 @@
       <div class="progress-node-wrap"><div class="progress-node progress-node--done">10</div><div class="progress-line"></div></div>
       <div class="progress-node-wrap"><div class="progress-node">11</div></div>
     </div>
-    <p class="progress-caption">4 of 11 phases done — Phase 10 (workflow visualization) was built out of order on purpose, not gated on the others.</p>
+    <p class="progress-caption">5 of 11 phases done — Phase 10 (workflow visualization) was built out of order on purpose, not gated on the others.</p>
   </div>
   </div>
 </header>
@@ -121,12 +121,19 @@
           </div>
         </li>
 
-        <li class="session session--planned">
+        <li class="session session--done">
           <div class="session-rail"><div class="session-node"></div></div>
           <div class="session-body col">
-            <div class="session-head"><h3>RAG retrieval layer</h3><span class="pill pill--planned">Planned</span></div>
-            <p class="session-summary">lib/rag/</p>
-            <p>Chunking, embeddings, in-memory cosine-similarity search. Embedding provider (local model vs. Voyage AI) decided at the start of this phase.</p>
+            <div class="session-head"><h3>RAG retrieval layer</h3><span class="pill pill--done">Done</span></div>
+            <p class="session-summary">src/lib/rag/ · 54 tests passing · real end-to-end smoke test against live queries</p>
+            <p>Local, self-hosted embeddings — <code>@huggingface/transformers</code> running <code>Xenova/all-MiniLM-L6-v2</code> — over Voyage AI, closing the one embedding-provider decision left open since the RAG mechanism was first designed. Chunking splits each corpus on its own <code>##</code> headings (placed for exactly this back in Phase 2); embeddings and a plain in-memory array replace any hosted vector store, appropriately scoped to a few dozen chunks total.</p>
+            <p>The interesting part of this phase was verifying retrieval actually works, not just that it runs. A real smoke test — genuine questions against the real corpora, not synthetic fixtures — surfaced retrieval quality problems worth working through rather than reporting as a clean first pass:</p>
+            <ul>
+              <li>The chunk containing ERISA's actual tiered-deadline table ranked <em>5th of 6</em> for "what does ERISA require for pre-service claims" — the one question it was built to answer. Root cause: the chunk was built almost entirely from raw markdown table syntax (pipes, a dash separator row), which a sentence-embedding model — trained overwhelmingly on prose — embeds poorly. Fixed by embedding a flattened, plain-language version of any table (converted to one sentence per row) while still citing and displaying the original markdown.</li>
+              <li>That fix barely moved the ranking. The real mechanism: mean-pooled embeddings dilute a long chunk's vector toward its average content, so a short, keyword-dense chunk can systematically out-rank a longer chunk that actually contains the answer — a well-documented, genuine limitation of pure embedding search, not a bug specific to this corpus. It was compounded by an actual design mistake: every document's pre-heading "Overview" chunk was just its <code>**Source:**</code> provenance line — already captured structurally in <code>manifest.ts</code>'s <code>citation</code> field — yet short and keyword-dense enough to out-rank real content. Dropped from the retrievable index entirely as redundant, not just re-ranked.</li>
+              <li>The underlying dilution problem remained, so added the standard mitigation: hybrid scoring, blending embedding similarity (70%) with a lightweight keyword-overlap signal (30%) — the industry-standard answer to exactly this weakness in pure embedding search. That recovered the ERISA tiers chunk to 2nd place (previously absent from the top 6 entirely). One query ("what counts as upcoding") still didn't fully resolve — a competing chunk happens to contain the literal word "upcoding" too — but the correct chunk was already within the top 2 there regardless, and default <code>k</code> was bumped to 4 for margin, which costs nothing at this corpus size.</li>
+            </ul>
+            <p>Left deliberately unresolved: retrieval ranking isn't perfect, and won't be tuned further at this scale — the practical backstop is that Phase 6 feeds several top-k chunks to Claude for actual answer synthesis, not just the single top-ranked one, so imperfect ranking within a small margin doesn't mean a wrong answer.</p>
           </div>
         </li>
 
@@ -240,7 +247,7 @@
           <tr><td>Claims schema &amp; seed generator</td><td>Done — 20 claims, 15 scenarios, seeded date generator, validated</td></tr>
           <tr><td>RAG corpora</td><td>Done — 3 documents, sourcing independently verified</td></tr>
           <tr><td>Deterministic calculation layer</td><td>Done — 31 tests passing, coverage-policy.md now generated from constants</td></tr>
-          <tr><td>RAG retrieval layer</td><td>Not started</td></tr>
+          <tr><td>RAG retrieval layer</td><td>Done — local embeddings, hybrid scoring, verified against real queries</td></tr>
           <tr><td>Evaluation pipeline</td><td>Not started</td></tr>
           <tr><td>Interactive router &amp; Anchor</td><td>Not started</td></tr>
           <tr><td>Human gate &amp; persistence</td><td>Not started</td></tr>

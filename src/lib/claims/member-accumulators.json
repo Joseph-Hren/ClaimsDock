@@ -1,19 +1,892 @@
 {
   "members": [
-    { "member_id": "MBR-4471029", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 500, "as_of": "2026-07-20" },
-    { "member_id": "MBR-5502187", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 0, "as_of": "2026-07-20" },
-    { "member_id": "MBR-3390155", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 500, "as_of": "2026-07-20" },
-    { "member_id": "MBR-2287740", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 320, "as_of": "2026-07-20" },
-    { "member_id": "MBR-6641820", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 0, "as_of": "2026-07-20" },
-    { "member_id": "MBR-1129384", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 500, "as_of": "2026-07-20" },
-    { "member_id": "MBR-7783921", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 0, "as_of": "2026-07-20" },
-    { "member_id": "MBR-9982104", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 150, "as_of": "2026-07-20" },
-    { "member_id": "MBR-3321987", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 0, "as_of": "2026-07-20" },
-    { "member_id": "MBR-4456218", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 260, "as_of": "2026-07-20" },
-    { "member_id": "MBR-5567340", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 500, "as_of": "2026-07-20" },
-    { "member_id": "MBR-6612903", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 500, "as_of": "2026-07-20" },
-    { "member_id": "MBR-7723014", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 405, "as_of": "2026-07-20" },
-    { "member_id": "MBR-8814027", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 500, "as_of": "2026-07-20" },
-    { "member_id": "MBR-9925617", "plan_year": 2026, "deductible_individual_limit": 500, "deductible_remaining": 0, "as_of": "2026-07-20" }
+    {
+      "member_id": "MBR-4471029",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-5502187",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-3390155",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-2287740",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 320,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-6641820",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-1129384",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-7783921",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-9982104",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 150,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-3321987",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 57,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-4456218",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 260,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-5567340",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-6612903",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-7723014",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 405,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-8814027",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-9925617",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-07-20"
+    },
+    {
+      "member_id": "MBR-7000001",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000002",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000003",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000004",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 320,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000005",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000006",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000007",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000008",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000009",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000010",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 180,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000011",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 100,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000012",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000013",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000014",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 58,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000015",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000016",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000017",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 180,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000018",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 250,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000019",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000020",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000021",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 260,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000022",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 58,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000023",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000024",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000025",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000026",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000027",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000028",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000029",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000030",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000031",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000032",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000033",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000034",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000035",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000036",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000037",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000038",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000039",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000040",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000041",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000042",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000043",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000044",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000045",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000046",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000047",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000048",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000049",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000050",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000051",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000052",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000053",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000054",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000055",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000056",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000057",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000058",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000059",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000060",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000061",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000062",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000063",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000064",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000065",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000066",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000067",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000068",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000069",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000070",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000071",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000072",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000073",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000074",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000075",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000076",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000077",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000078",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000079",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000080",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000081",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000082",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000083",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000084",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000085",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000086",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000087",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-04"
+    },
+    {
+      "member_id": "MBR-7000101",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 230,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-06"
+    },
+    {
+      "member_id": "MBR-7000102",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 0,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-06"
+    },
+    {
+      "member_id": "MBR-7000103",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-06"
+    },
+    {
+      "member_id": "MBR-7000104",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 115,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-06"
+    },
+    {
+      "member_id": "MBR-7000105",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-06"
+    },
+    {
+      "member_id": "MBR-7000106",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-06"
+    },
+    {
+      "member_id": "MBR-7000107",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-06"
+    },
+    {
+      "member_id": "MBR-7000108",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-06"
+    },
+    {
+      "member_id": "MBR-7000109",
+      "plan_year": 2026,
+      "deductible_individual_limit": 500,
+      "deductible_remaining": 500,
+      "inpatient_days_used_this_plan_year": 0,
+      "as_of": "2026-08-06"
+    }
   ]
 }

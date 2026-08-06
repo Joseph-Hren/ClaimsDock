@@ -9,6 +9,7 @@
 import claimsData from './claims-seed-data.json';
 import providerHistoryData from './provider-history.json';
 import type { Claim, GeneratedClaim, ProviderHistoryEntry, UrgencyTarget } from './types';
+import { getISOWeekKey } from './iso-week';
 
 const SLA_WINDOW_HOURS: Record<'standard' | 'urgent', number> = {
   standard: 30 * 24, // 30 days
@@ -39,21 +40,18 @@ function mulberry32(seed: number) {
   };
 }
 
-function getISOWeekSeed(date: Date): number {
-  // ISO 8601 week number, Thursday-anchored — standard algorithm.
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  const weekNum = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
-  // Fold ISO year + week into a single numeric seed (e.g. 2026-W30 -> 202630).
-  return d.getUTCFullYear() * 100 + weekNum;
-}
-
-export function generateClaims(now: Date = new Date()): GeneratedClaim[] {
-  const seed = getISOWeekSeed(now);
+// A temporary cap lived here from Pass F's 20->123 claim jump (2026-08-06)
+// until Pass G's chunked-batching design landed — generateClaims() used to
+// silently limit every live caller to the first 20 authored claims so the
+// (then-unsolved) Pipeline timeout at full volume never got triggered by
+// just loading the app. Pass G's real fix (orchestrator.ts's chunked,
+// evenly-distributed, retry-wrapped batching) is now live and proven at full
+// scale, so the cap is gone — `limit` still exists as an optional override
+// (e.g. a smaller manual test run), defaulting to the full authored set.
+export function generateClaims(now: Date = new Date(), limit: number = Infinity): GeneratedClaim[] {
+  const seed = getISOWeekKey(now);
   const rand = mulberry32(seed);
-  const claims = (claimsData as { claims: Claim[] }).claims;
+  const claims = (claimsData as { claims: Claim[] }).claims.slice(0, limit);
 
   return claims.map((claim) => {
     const [lo, hi] = URGENCY_BANDS[claim.urgency_target];

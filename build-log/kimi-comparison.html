@@ -1,0 +1,572 @@
+<title>ClaimsDock — Claude vs. Kimi Pipeline Comparison</title>
+
+<style>
+:root {
+  --bg: #F7F4EE;
+  --bg-panel: #FFFFFF;
+  --ink: #1E2530;
+  --ink-muted: #5B6472;
+  --ink-faint: #5C6371;
+  --border: #DDD7C9;
+  --border-strong: #C8C0AC;
+  --claude: #0F6B66;
+  --claude-fill: #0F6B6622;
+  --kimi: #8F470F;
+  --kimi-fill: #C1611B22;
+  --good: #2E7D4F;
+  --good-fill: #2E7D4F1A;
+  --caution: #7A5A08;
+  --caution-fill: #B8860B1A;
+  --danger: #B23A2E;
+  --danger-fill: #B23A2E1A;
+  --radius: 14px;
+  --font-display: Iowan Old Style, Palatino Linotype, Palatino, Georgia, serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Code", Consolas, monospace;
+}
+
+:root[data-theme="dark"] {
+  --bg: #14181F;
+  --bg-panel: #1C222C;
+  --ink: #EDEFF3;
+  --ink-muted: #A2ACBA;
+  --ink-faint: #8891A0;
+  --border: #2C3341;
+  --border-strong: #3B4353;
+  --claude: #35A79C;
+  --claude-fill: #35A79C26;
+  --kimi: #E08A3E;
+  --kimi-fill: #E08A3E26;
+  --good: #5CC98A;
+  --good-fill: #4EAE7822;
+  --caution: #D4A93A;
+  --caution-fill: #D4A93A22;
+  --danger: #E0685A;
+  --danger-fill: #E0685A22;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14181F;
+    --bg-panel: #1C222C;
+    --ink: #EDEFF3;
+    --ink-muted: #A2ACBA;
+    --ink-faint: #8891A0;
+    --border: #2C3341;
+    --border-strong: #3B4353;
+    --claude: #35A79C;
+    --claude-fill: #35A79C26;
+    --kimi: #E08A3E;
+    --kimi-fill: #E08A3E26;
+    --good: #5CC98A;
+    --good-fill: #4EAE7822;
+    --caution: #D4A93A;
+    --caution-fill: #D4A93A22;
+    --danger: #E0685A;
+    --danger-fill: #E0685A22;
+  }
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); line-height: 1.5; }
+.wrap { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+
+header.hero {
+  padding: 72px 0 48px;
+  border-bottom: 1px solid var(--border);
+}
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--kimi);
+  font-weight: 600;
+}
+h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4.5vw, 3.1rem);
+  font-weight: 600;
+  margin: 10px 0 14px;
+  text-wrap: balance;
+  letter-spacing: -0.01em;
+}
+.dek {
+  font-size: 1.05rem;
+  color: var(--ink-muted);
+  max-width: 62ch;
+  margin: 0 0 8px;
+}
+.dek b { color: var(--ink); font-weight: 600; }
+
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 40px;
+}
+.stat {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+}
+.stat .num {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.stat .num.danger { color: var(--danger); }
+.stat .num.claude { color: var(--claude); }
+.stat .num.kimi { color: var(--kimi); }
+.stat .label {
+  font-size: 0.8rem;
+  color: var(--ink-muted);
+  margin-top: 8px;
+  line-height: 1.35;
+}
+
+section { padding: 56px 0; border-bottom: 1px solid var(--border); }
+section:last-of-type { border-bottom: none; }
+h2 {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin: 0 0 6px;
+  text-wrap: balance;
+}
+.section-note {
+  color: var(--ink-muted);
+  font-size: 0.95rem;
+  max-width: 68ch;
+  margin: 0 0 32px;
+}
+
+.panel {
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 28px 20px;
+}
+
+.chart-scroll { overflow-x: auto; }
+svg { display: block; font-family: var(--font-body); }
+.axis-label { fill: var(--ink-faint); font-size: 11px; }
+.axis-line { stroke: var(--border-strong); stroke-width: 1; }
+.gridline { stroke: var(--border); stroke-width: 1; }
+
+.legend { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; font-size: 0.85rem; }
+.legend-item { display: flex; align-items: center; gap: 8px; color: var(--ink-muted); }
+.swatch { width: 12px; height: 12px; border-radius: 3px; flex-shrink: 0; }
+
+.tooltip {
+  position: fixed;
+  pointer-events: none;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 8px 11px;
+  border-radius: 8px;
+  line-height: 1.5;
+  max-width: 260px;
+  opacity: 0;
+  transition: opacity 0.1s;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+}
+:root[data-theme="dark"] .tooltip { background: #EDEFF3; color: #14181F; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .tooltip { background: #EDEFF3; color: #14181F; }
+}
+.tooltip.visible { opacity: 1; }
+.tooltip b { display: block; margin-bottom: 3px; font-family: var(--font-body); font-weight: 700; }
+
+.dot { cursor: pointer; }
+.dot:hover, .dot.hovered { stroke-width: 3; }
+.bar-seg { cursor: pointer; }
+.bar-seg:hover { filter: brightness(1.12); }
+
+.table-toggle {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  background: none;
+  border: 1px solid var(--border-strong);
+  color: var(--ink-muted);
+  border-radius: 999px;
+  padding: 6px 14px;
+  cursor: pointer;
+  margin-bottom: 18px;
+}
+.table-toggle:hover { border-color: var(--ink-muted); color: var(--ink); }
+.data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; margin-top: 8px; }
+.data-table th, .data-table td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; }
+.data-table th { color: var(--ink-muted); font-weight: 600; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.hidden { display: none; }
+
+.finding-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
+.finding-list li {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: 16px;
+  align-items: baseline;
+}
+.finding-list .mark {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  font-weight: 700;
+  align-self: start;
+  margin-top: 2px;
+}
+.mark.good { background: var(--good-fill); color: var(--good); }
+.mark.caution { background: var(--caution-fill); color: var(--caution); }
+.mark.danger { background: var(--danger-fill); color: var(--danger); }
+.finding-list b { display: block; margin-bottom: 3px; }
+.finding-list p { margin: 0; color: var(--ink-muted); font-size: 0.92rem; }
+
+.category-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+.category-list li { display: flex; gap: 10px; align-items: baseline; font-size: 0.92rem; color: var(--ink-muted); }
+.category-list li::before {
+  content: '';
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--kimi);
+  flex-shrink: 0;
+  margin-top: 7px;
+}
+.category-list b { color: var(--ink); font-weight: 600; }
+
+.run-row { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
+.run-row .run-label { width: 100px; flex-shrink: 0; white-space: nowrap; font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-muted); }
+.run-row .bar-track {
+  flex: 1;
+  display: flex;
+  height: 22px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--border);
+}
+
+footer { padding: 40px 0 60px; color: var(--ink-faint); font-size: 0.82rem; }
+footer p { max-width: 68ch; }
+
+@media (max-width: 640px) {
+  header.hero { padding: 48px 0 36px; }
+  section { padding: 40px 0; }
+  .panel { padding: 20px 16px 16px; }
+}
+</style>
+
+<div class="tooltip" id="tooltip" aria-hidden="true"></div>
+
+<header class="hero">
+  <div class="wrap">
+    <span class="eyebrow">ClaimsDock · Live model comparison</span>
+    <h1>Claude vs. Kimi, tested the hard way</h1>
+    <p class="dek">ClaimsDock is a prototype medical-claims adjudication copilot: an AI pipeline reads a set of fictional, purpose-built test claims and proposes how each should be categorized. This page compares two models running that same pipeline — <b>Claude (Anthropic) against Kimi (Moonshot AI)</b> — across more than a dozen live test batches on one fixed 20-claim set. Not "which model is smarter" so much as <b>which one is safe enough to run unsupervised,</b> and at what cost.</p>
+    <div class="stat-row">
+      <div class="stat"><div class="num claude">18.4<span style="font-size:1.1rem;color:var(--ink-faint);">/20</span></div><div class="label">Claude's average accuracy, confirmed across repeated batches</div></div>
+      <div class="stat"><div class="num kimi">18.6<span style="font-size:1.1rem;color:var(--ink-faint);">/20</span></div><div class="label">Kimi's latest result, after a second grading correction and one more targeted prompt example (16.3 average across the batches shown below)</div></div>
+      <div class="stat"><div class="num danger">5%</div><div class="label">Kimi's corrected silent-miss rate — nearly matching Claude's own 5%, once a mislabeled test claim was fixed (see below; one batch so far, not yet independently reconfirmed)</div></div>
+      <div class="stat"><div class="num">~5x</div><div class="label">cheaper per token for Kimi — the whole reason this comparison exists</div></div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+<section id="setup" style="padding: 40px 0 0; border-bottom: none;">
+  <div class="wrap">
+    <div class="panel" style="padding: 22px 26px;">
+      <h2 style="font-size: 1.05rem; margin-bottom: 14px;">What's being tested</h2>
+      <p style="color: var(--ink-muted); font-size: 0.92rem; margin: 0 0 14px; max-width: 72ch;">Every test claim gets sorted into one of five categories:</p>
+      <ul class="category-list">
+        <li><b>Clean</b> — no issue found.</li>
+        <li><b>Complex-math</b> — a real coverage calculation (a deductible or benefit-cap crossing), but mechanical, not a judgment call.</li>
+        <li><b>Ambiguous</b> — a genuine judgment call the system can't resolve from the claim alone.</li>
+        <li><b>Missing-data</b> — a required field is actually absent.</li>
+        <li><b>Fraud</b> — phantom billing, upcoding, unbundling, double billing, unnecessary care, or a documented provider volume spike.</li>
+      </ul>
+      <p style="color: var(--ink-muted); font-size: 0.92rem; margin: 14px 0 0; max-width: 72ch;">That category, plus a confidence tier from a second, independent pass, together decide whether a claim resolves automatically or goes to a human — the mechanism the "silent miss" section below is about.</p>
+    </div>
+  </div>
+</section>
+
+<section id="accuracy">
+  <div class="wrap">
+    <h2>The accuracy arc</h2>
+    <p class="section-note">Six prompt iterations, same fixed claim set, same instructions on both sides wherever the test called for it. Each point is the mean of a 5-run batch, graded against the ground truth understood <i>at the time</i> — Claude leads every iteration shown here. A ground-truth correction and one further iteration since (see below) brought Kimi to 18.6 in its most recent batch, ahead of every point on this chart — that result isn't plotted here yet, since it isn't graded on the same basis as the batches that are.</p>
+    <div class="panel">
+      <div class="legend">
+        <div class="legend-item"><span class="swatch" style="background:var(--claude)"></span>Claude (Sonnet 5)</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--kimi)"></span>Kimi (K2.6)</div>
+      </div>
+      <button class="table-toggle" data-toggle="accuracy-table">View as table</button>
+      <div class="chart-scroll"><svg id="chart-accuracy" viewBox="0 0 900 380" width="100%" style="min-width:640px"></svg></div>
+      <table class="data-table hidden" id="accuracy-table">
+        <thead><tr><th>Iteration</th><th>Claude</th><th>Kimi</th><th>Note</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p style="font-size: 0.82rem; color: var(--ink-muted); margin: 20px 0 0; line-height: 1.6;">
+        <b style="color: var(--ink);">What each iteration changed:</b>
+        "Base addendum" — a handful of worked examples added to the prompt for categories the model was getting wrong.
+        "+ complex-math example" — one more worked example, targeting a specific miscategorized claim.
+        "+ reasoning field" — the model must write a brief explicit justification before committing to a category, not just after.
+        "+ reasoning, tightened" — a follow-up instruction telling it not to default to "clean" when uncertain.
+        "Reasoning removed" — that field dropped again, since it helped Claude but not Kimi (see below).
+      </p>
+    </div>
+  </div>
+</section>
+
+<section id="reliability">
+  <div class="wrap">
+    <h2>Reliability: how often a run fails outright</h2>
+    <p class="section-note">Independent of accuracy — how often did a batch exhaust all retries and fail to complete at all. Measured across the three clean, uninterrupted same-day batches (a rate-limit-affected batch is excluded as an infrastructure confound, not a model signal). The pattern held in every later batch too: Kimi has completed 20 of 20 runs cleanly since; Claude has failed roughly 1 in 5, a real and repeated pattern tied to its own Confidence step, not a fluke.</p>
+    <div class="panel">
+      <div class="legend">
+        <div class="legend-item"><span class="swatch" style="background:var(--claude)"></span>Claude</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--kimi)"></span>Kimi</div>
+      </div>
+      <div class="chart-scroll"><svg id="chart-reliability" viewBox="0 0 900 260" width="100%" style="min-width:560px"></svg></div>
+    </div>
+  </div>
+</section>
+
+<section id="silent-miss">
+  <div class="wrap">
+    <h2>Accuracy and safety are both the story — just different questions</h2>
+    <p class="section-note">ClaimsDock's pipeline is two model calls, not one: a first pass proposes a <b>category</b>, then a second, independent pass assigns a <b>confidence tier</b> without seeing the first call's reasoning. A deterministic rule then decides what happens next — a claim that's actually fraud or ambiguous <i>always</i> reaches a human, regardless of confidence, but a claim wrongly called "clean" with a confident tier resolves automatically, with no human ever reviewing it. Raw accuracy can't see that difference; it counts every wrong category the same. This section can — it's the one place a wrong-but-cautious answer and a wrong-and-confident one are told apart. Both charts matter: one says how often each model is right, this one says how dangerous it is when it isn't.</p>
+    <div class="panel">
+      <div class="legend">
+        <div class="legend-item"><span class="swatch" style="background:var(--good)"></span>Correct</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--caution)"></span>Wrong, but caught (still reviewed)</div>
+        <div class="legend-item"><span class="swatch" style="background:var(--danger)"></span>Silent miss (auto-approved, unreviewed)</div>
+        <div class="legend-item"><span class="swatch" style="background:repeating-linear-gradient(135deg, var(--ink-faint), var(--ink-faint) 3px, transparent 3px, transparent 6px);opacity:0.7"></span>Failed outright (no result at all)</div>
+      </div>
+      <p style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--kimi); text-transform: uppercase; letter-spacing: 0.05em; margin: 4px 0 10px;">Kimi — 10 runs across two batches, own best configuration</p>
+      <div id="run-bars-kimi"></div>
+      <p style="font-family: var(--font-mono); font-size: 0.72rem; color: var(--claude); text-transform: uppercase; letter-spacing: 0.05em; margin: 22px 0 10px;">Claude — 10 runs across two batches, own best configuration (2 failed outright, shown below)</p>
+      <div id="run-bars-claude"></div>
+      <p style="font-size: 0.82rem; color: var(--ink-muted); margin: 20px 0 0;">Full run counts shown above, not just one representative batch — 10 for Kimi (0 failures), 10 for Claude (8 successful, 2 failed outright, shown as hatched bars rather than silently dropped). Kimi held at 13 silent misses across its 10 runs; Claude at 4 across its 8 successful ones — steady enough across two independent batches each that this wasn't a one-off draw on either side, at the time it was measured. Since then, one of Kimi's own ground-truth labels was found to be mislabeled (see below) — that single claim accounted for most of Kimi's silent misses above. Correcting it and adding one more targeted prompt example dropped Kimi's rate to 5 silent misses in its most recent 5-run batch, close to Claude's own rate rather than meaningfully above it. The bars above reflect the original measurement, not redrawn onto it, so the two eras of grading stay honestly distinguishable.</p>
+    </div>
+  </div>
+</section>
+
+<section id="lessons">
+  <div class="wrap">
+    <h2>What the process itself surfaced</h2>
+    <p class="section-note">Some of the most useful findings weren't about either model — they were about the testing itself.</p>
+    <ul class="finding-list">
+      <li><span class="mark caution">!</span><div><b>Our own test harness had a grading bug — twice.</b><p>Two claims' ground-truth labels described which authored scenario they belonged to, not the category the Pipeline should actually assign to that specific claim — silently under-scoring both providers for most of the session. The second one mattered more than expected: once corrected, most of what looked like a Kimi-specific safety gap turned out to be a mislabeled test claim, not a real difference in how dangerous each model's mistakes are.</p></div></li>
+      <li><span class="mark danger">×</span><div><b>Kimi's native "thinking" mode breaks structured output.</b><p>Enabling it floods the response with near-blank filler tokens and never completes the JSON — confirmed reproducible twice, including after the prompt changed substantially. Disabling it is what actually works.</p></div></li>
+      <li><span class="mark caution">$</span><div><b>Both providers hit a real infrastructure ceiling.</b><p>Claude's prepaid balance ran out mid-session; Kimi's new-account tier hit its 1.5M-token daily cap purely from testing volume. Neither was a model problem — both were fixed with a small top-up.</p></div></li>
+      <li><span class="mark good">✓</span><div><b>Targeted prompt examples measurably helped — the ones that were tested against real weak spots.</b><p>Two fraud sub-types that Kimi systematically under-flagged both recovered after adding worked examples targeting them specifically. A complex-math example, added for a different claim, never fixed its target — evidence that this kind of tuning has to be verified, not assumed.</p></div></li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Methodology: a fixed, ISO-week-seeded 20-claim set (identical input across every run), live API calls against both providers' real endpoints, 5-run batches per configuration. "Silent miss" = ground truth is not clean, but the Pipeline's deterministic status layer resolved the claim without any human action. Figures reflect testing performed 2026-08-02.</p>
+  </div>
+</footer>
+
+<script>
+// Set at runtime rather than as a static <html lang> attribute — this file
+// has no <html> tag of its own (Artifact hosting wraps it in one; a browser
+// opening the raw file directly generates one implicitly either way), so
+// this is the one reliable way to set it regardless of how the page is
+// actually served.
+document.documentElement.lang = 'en';
+(function () {
+  const tooltip = document.getElementById('tooltip');
+  function showTip(html, x, y) {
+    tooltip.innerHTML = html;
+    tooltip.style.left = (x + 16) + 'px';
+    tooltip.style.top = (y + 16) + 'px';
+    tooltip.classList.add('visible');
+  }
+  function hideTip() { tooltip.classList.remove('visible'); }
+
+  // ---------- Chart 1: accuracy line chart ----------
+  const iterations = [
+    { label: 'Base addendum', claude: 18.5, kimi: 16.0, note: 'Shared clarification + fraud examples' },
+    { label: '+ complex-math ex.', claude: 17.0, kimi: 17.4, note: "Kimi's best result without a reasoning field" },
+    { label: '+ reasoning field', claude: 19.0, kimi: 15.3, note: 'Kimi batch cut short by a rate limit (n=3)' },
+    { label: '+ reasoning (redo)', claude: 19.0, kimi: 16.2, note: 'Full 5-run Kimi redo, same prompt' },
+    { label: '+ reasoning, tightened', claude: 18.2, kimi: 16.6, note: 'Explicit "do not default to clean" instruction added' },
+    { label: 'Reasoning removed', claude: 18.2, kimi: 16.8, note: "Kimi's best overall result" },
+  ];
+
+  (function renderAccuracy() {
+    const svg = document.getElementById('chart-accuracy');
+    const W = 900, H = 380, M = { top: 20, right: 24, bottom: 64, left: 44 };
+    const innerW = W - M.left - M.right, innerH = H - M.top - M.bottom;
+    const yMin = 12, yMax = 20;
+    const x = i => M.left + (innerW * i) / (iterations.length - 1);
+    const y = v => M.top + innerH - ((v - yMin) / (yMax - yMin)) * innerH;
+
+    let svgHTML = '';
+    // gridlines
+    for (let v = yMin; v <= yMax; v += 2) {
+      svgHTML += `<line class="gridline" x1="${M.left}" x2="${W - M.right}" y1="${y(v)}" y2="${y(v)}" />`;
+      svgHTML += `<text class="axis-label" x="${M.left - 10}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+    }
+    svgHTML += `<line class="axis-line" x1="${M.left}" x2="${W - M.right}" y1="${M.top + innerH}" y2="${M.top + innerH}" />`;
+
+    iterations.forEach((d, i) => {
+      svgHTML += `<text class="axis-label" x="${x(i)}" y="${H - 18}" text-anchor="middle" style="font-size:10px">${d.label.split(' ').join('\\n')}</text>`;
+    });
+
+    function path(key, color) {
+      let d = '';
+      iterations.forEach((pt, i) => { d += (i === 0 ? 'M' : 'L') + x(i) + ',' + y(pt[key]) + ' '; });
+      return `<path d="${d}" fill="none" stroke="${color}" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" />`;
+    }
+    svgHTML += path('claude', 'var(--claude)');
+    svgHTML += path('kimi', 'var(--kimi)');
+
+    iterations.forEach((d, i) => {
+      svgHTML += `<circle class="dot" data-idx="${i}" data-series="claude" cx="${x(i)}" cy="${y(d.claude)}" r="5.5" fill="var(--claude)" stroke="var(--bg-panel)" stroke-width="2" />`;
+      svgHTML += `<circle class="dot" data-idx="${i}" data-series="kimi" cx="${x(i)}" cy="${y(d.kimi)}" r="5.5" fill="var(--kimi)" stroke="var(--bg-panel)" stroke-width="2" />`;
+    });
+
+    svg.innerHTML = svgHTML;
+
+    svg.querySelectorAll('.dot').forEach(dot => {
+      dot.addEventListener('mouseenter', (e) => {
+        const i = +dot.dataset.idx, series = dot.dataset.series;
+        const d = iterations[i];
+        const label = series === 'claude' ? 'Claude' : 'Kimi';
+        showTip(`<b>${label} — ${d.label}</b>${d[series]}/20 mean accuracy<br>${d.note}`, e.clientX, e.clientY);
+      });
+      dot.addEventListener('mousemove', (e) => { tooltip.style.left = (e.clientX + 16) + 'px'; tooltip.style.top = (e.clientY + 16) + 'px'; });
+      dot.addEventListener('mouseleave', hideTip);
+    });
+
+    // table
+    const tbody = document.querySelector('#accuracy-table tbody');
+    tbody.innerHTML = iterations.map(d => `<tr><td>${d.label}</td><td>${d.claude}</td><td>${d.kimi}</td><td>${d.note}</td></tr>`).join('');
+  })();
+
+  // ---------- Chart 2: reliability paired bars ----------
+  const reliability = [
+    { label: 'Base addendum', claude: 1, kimi: 0 },
+    { label: '+ complex-math example', claude: 2, kimi: 0 },
+    { label: '+ reasoning, tightened', claude: 0, kimi: 0 },
+  ];
+
+  (function renderReliability() {
+    const svg = document.getElementById('chart-reliability');
+    const W = 900, H = 260, M = { top: 20, right: 24, bottom: 60, left: 44 };
+    const innerW = W - M.left - M.right, innerH = H - M.top - M.bottom;
+    const maxV = 5;
+    const groupW = innerW / reliability.length;
+    const barW = 34, gap = 10;
+    const y = v => M.top + innerH - (v / maxV) * innerH;
+
+    let s = '';
+    for (let v = 0; v <= maxV; v++) {
+      s += `<line class="gridline" x1="${M.left}" x2="${W - M.right}" y1="${y(v)}" y2="${y(v)}" />`;
+      s += `<text class="axis-label" x="${M.left - 10}" y="${y(v) + 4}" text-anchor="end">${v}</text>`;
+    }
+    s += `<line class="axis-line" x1="${M.left}" x2="${W - M.right}" y1="${M.top + innerH}" y2="${M.top + innerH}" />`;
+
+    reliability.forEach((d, i) => {
+      const cx = M.left + groupW * i + groupW / 2;
+      const cH = M.top + innerH;
+      const claudeH = (d.claude / maxV) * innerH;
+      const kimiH = (d.kimi / maxV) * innerH;
+      s += `<rect class="bar-seg" data-label="Claude — ${d.label}" data-val="${d.claude}" x="${cx - gap/2 - barW}" y="${cH - claudeH}" width="${barW}" height="${Math.max(claudeH,2)}" rx="4" fill="var(--claude)" />`;
+      s += `<rect class="bar-seg" data-label="Kimi — ${d.label}" data-val="${d.kimi}" x="${cx + gap/2}" y="${cH - kimiH}" width="${barW}" height="${Math.max(kimiH,2)}" rx="4" fill="var(--kimi)" />`;
+      s += `<text class="axis-label" x="${cx}" y="${H - 30}" text-anchor="middle" style="font-size:11px">${d.label}</text>`;
+    });
+
+    svg.innerHTML = s;
+    svg.querySelectorAll('.bar-seg').forEach(bar => {
+      bar.addEventListener('mouseenter', (e) => showTip(`<b>${bar.dataset.label}</b>${bar.dataset.val} of 5 runs failed outright`, e.clientX, e.clientY));
+      bar.addEventListener('mousemove', (e) => { tooltip.style.left = (e.clientX + 16) + 'px'; tooltip.style.top = (e.clientY + 16) + 'px'; });
+      bar.addEventListener('mouseleave', hideTip);
+    });
+  })();
+
+  // ---------- Chart 3: silent-miss stacked bars per run, both providers ----------
+  // Both providers' full run counts across their two same-basis batches —
+  // not just one representative batch each. The later, post-correction
+  // batch (5 more Kimi runs, 5 silent misses) is intentionally left out of
+  // this set — it's graded on the corrected basis, not this one, and is
+  // covered separately in the note below instead of being mixed in here.
+  const kimiRuns = [
+    { label: 'Batch 1 · Run 1', correct: 15, caught: 0, silent: 5, names: ['AMB-CMS-01', 'AMB-CMB-01A', 'AMB-CMB-01B', 'CPX-CMS-01', 'FRD-MISMATCH-01A'] },
+    { label: 'Batch 1 · Run 2', correct: 16, caught: 2, silent: 2, names: ['AMB-CMB-01A', 'AMB-CMB-01B'] },
+    { label: 'Batch 1 · Run 3', correct: 18, caught: 0, silent: 2, names: ['AMB-CMS-01', 'CPX-CMS-01'] },
+    { label: 'Batch 1 · Run 4', correct: 19, caught: 0, silent: 1, names: ['CPX-CMS-01'] },
+    { label: 'Batch 1 · Run 5', correct: 16, caught: 1, silent: 3, names: ['AMB-CMB-01A', 'FRD-UNBUNDLE-01', 'FRD-MISMATCH-01A'] },
+    { label: 'Batch 2 · Run 1', correct: 16, caught: 1, silent: 3, names: ['AMB-CMB-01A', 'AMB-CMB-01B', 'CPX-CMS-01'] },
+    { label: 'Batch 2 · Run 2', correct: 17, caught: 0, silent: 3, names: ['AMB-CMB-01A', 'AMB-CMB-01B', 'CPX-CMS-01'] },
+    { label: 'Batch 2 · Run 3', correct: 15, caught: 4, silent: 1, names: ['CPX-CMS-01'] },
+    { label: 'Batch 2 · Run 4', correct: 17, caught: 0, silent: 3, names: ['AMB-CMB-01A', 'AMB-CMB-01B', 'CPX-CMS-01'] },
+    { label: 'Batch 2 · Run 5', correct: 15, caught: 2, silent: 3, names: ['AMB-CMB-01A', 'AMB-CMB-01B', 'CPX-CMS-01'] },
+  ];
+
+  // Both of Claude's real outright failures included at their true original
+  // positions, not silently dropped — a run that fails produces no claim
+  // results at all, so it's rendered as its own distinct state below rather
+  // than folded into the correct/caught/silent breakdown.
+  const claudeRuns = [
+    { label: 'Batch 1 · Run 1', correct: 18, caught: 0, silent: 2, names: ['CPX-CMS-01', 'FRD-MISMATCH-01A'] },
+    { label: 'Batch 1 · Run 2', correct: 19, caught: 0, silent: 1, names: ['CPX-CMS-01'] },
+    { label: 'Batch 1 · Run 3', correct: 18, caught: 1, silent: 1, names: ['FRD-MISMATCH-01A'] },
+    { label: 'Batch 1 · Run 4', failed: true },
+    { label: 'Batch 1 · Run 5', correct: 19, caught: 1, silent: 0, names: [] },
+    { label: 'Batch 2 · Run 1', failed: true },
+    { label: 'Batch 2 · Run 2', correct: 19, caught: 0, silent: 1, names: ['CPX-CMS-01'] },
+    { label: 'Batch 2 · Run 3', correct: 18, caught: 1, silent: 1, names: ['FRD-MISMATCH-01A'] },
+    { label: 'Batch 2 · Run 4', correct: 18, caught: 1, silent: 1, names: ['CPX-CMS-01'] },
+    { label: 'Batch 2 · Run 5', correct: 18, caught: 1, silent: 1, names: ['CPX-CMS-01'] },
+  ];
+
+  function renderRunBars(containerId, runs) {
+    const container = document.getElementById(containerId);
+    let html = '';
+    runs.forEach(r => {
+      html += `<div class="run-row"><div class="run-label">${r.label}</div><div class="bar-track">`;
+      if (r.failed) {
+        html += `<div class="bar-seg" data-tip="Failed outright — exhausted all retries, no usable result at all (not a claim-level miss, a completeness failure)" style="width:100%;background:repeating-linear-gradient(135deg, var(--ink-faint), var(--ink-faint) 6px, transparent 6px, transparent 12px);opacity:0.55"></div>`;
+      } else {
+        html += `<div class="bar-seg" data-tip="${r.correct} of 20 correctly categorized" style="width:${(r.correct/20)*100}%;background:var(--good)"></div>`;
+        if (r.caught > 0) html += `<div class="bar-seg" data-tip="${r.caught} wrong, but low confidence routed it to a human anyway" style="width:${(r.caught/20)*100}%;background:var(--caution)"></div>`;
+        html += `<div class="bar-seg" data-tip="${r.silent} SILENT MISS: ${r.names.join(', ')}" style="width:${(r.silent/20)*100}%;background:var(--danger)"></div>`;
+      }
+      html += `</div></div>`;
+    });
+    container.innerHTML = html;
+    container.querySelectorAll('.bar-seg').forEach(seg => {
+      seg.addEventListener('mouseenter', (e) => showTip(seg.dataset.tip, e.clientX, e.clientY));
+      seg.addEventListener('mousemove', (e) => { tooltip.style.left = (e.clientX + 16) + 'px'; tooltip.style.top = (e.clientY + 16) + 'px'; });
+      seg.addEventListener('mouseleave', hideTip);
+    });
+  }
+  renderRunBars('run-bars-kimi', kimiRuns);
+  renderRunBars('run-bars-claude', claudeRuns);
+
+  // ---------- table toggle ----------
+  document.querySelectorAll('[data-toggle]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const chart = btn.nextElementSibling;
+      const table = document.getElementById(btn.dataset.toggle);
+      const showingTable = !table.classList.contains('hidden');
+      table.classList.toggle('hidden');
+      chart.classList.toggle('hidden');
+      btn.textContent = showingTable ? 'View as table' : 'View as chart';
+    });
+  });
+})();
+</script>

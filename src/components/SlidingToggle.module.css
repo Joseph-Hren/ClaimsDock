@@ -1,0 +1,58 @@
+.track {
+  position: relative;
+  display: inline-flex;
+  align-self: flex-start;
+  /* Seals the pill/thumb z-index values into their own stacking context so
+     they can never leak out and compete with unrelated content elsewhere on
+     the page (they did — the pill's z-index:1 was winning against a modal
+     shade's much higher z-index, because nothing between them established a
+     real stacking context for it to be contained within). */
+  isolation: isolate;
+  /* --toggle-track-bg/--toggle-thumb-bg default in tokens.css (the Claims
+     Card look); a colored context like StatTiles overrides both in its own
+     stylesheet, and the cascade means it never has to touch this file. */
+  background: var(--toggle-track-bg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 2px;
+  gap: 2px;
+}
+
+.thumb {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  left: 0;
+  background: var(--toggle-thumb-bg);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.16);
+  transition: transform var(--dur-toggle-slide) var(--ease-standard), width var(--dur-toggle-slide) var(--ease-standard);
+}
+
+.pill {
+  position: relative;
+  z-index: 1;
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+  white-space: nowrap;
+  transition: color var(--dur-toggle-slide) var(--ease-standard);
+}
+
+.pillIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.pillActive {
+  color: var(--ink-primary);
+}
+
+.small .pill {
+  padding: 5px 12px;
+  font-size: 0.75rem;
+}

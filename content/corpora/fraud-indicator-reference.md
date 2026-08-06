@@ -1,11 +1,5 @@
 # Fraud-Indicator Reference
 
-**Source:** Independently verified 2026-07-27 (see project-spec.txt Section 2
-and the closing citations for the correction history — an earlier draft of
-this project over-attributed all five typology names to a single FinCEN
-advisory; that attribution has been corrected below). Real, named,
-publicly-documented categories — not a proprietary insurer model.
-
 ## The Common Thread (NHCAA)
 
 The National Health Care Anti-Fraud Association's public consumer-information

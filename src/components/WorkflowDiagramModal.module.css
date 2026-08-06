@@ -1,0 +1,74 @@
+.frame {
+  position: fixed;
+  top: 4vh;
+  left: 4vw;
+  width: 92vw;
+  height: 92vh;
+  /* Above its own shade (z=100, set in Dashboard.tsx) and everything else
+     in the card/overlay stack (card z=30, action-confirm overlay z=50) —
+     this modal is meant to sit above all of that regardless of what else
+     is open, but had no z-index at all, so it was defaulting to stacking
+     as if z-index: 0 and rendering underneath an open card. */
+  z-index: 110;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.35),
+    0 8px 24px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  animation: modal-in var(--dur-fade-in) var(--ease-standard);
+}
+.frame.closing {
+  animation: modal-out var(--dur-fade-out) var(--ease-standard) forwards;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-divider);
+  flex-shrink: 0;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+}
+
+.close {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+.close:hover {
+  color: var(--ink-primary);
+}
+
+.iframe {
+  flex: 1;
+  border: none;
+  width: 100%;
+}
+
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes modal-out {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+}

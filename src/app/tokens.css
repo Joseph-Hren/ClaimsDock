@@ -1,0 +1,285 @@
+/* Design tokens — mirrors the Figma Color / Type & Shape / Colors (badge)
+   variable collections exactly, one CSS custom property per Figma variable.
+   Style (Ledger/Clinical/Field) and brightness (light/dark) are independent
+   axes, same as in Figma — set via [data-style] and [data-theme] on <html>. */
+
+/* ---- Type & Shape (per style, independent of light/dark) ---- */
+
+[data-style='ledger'] {
+  --font-heading: var(--font-lora), Georgia, serif;
+  --font-body: var(--font-lora), Georgia, serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+}
+
+[data-style='clinical'] {
+  --font-heading: var(--font-karla), system-ui, sans-serif;
+  --font-body: var(--font-karla), system-ui, sans-serif;
+  --font-mono: var(--font-ibm-plex-mono), ui-monospace, monospace;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+}
+
+[data-style='field'] {
+  --font-heading: var(--font-outfit), system-ui, sans-serif;
+  --font-body: var(--font-outfit), system-ui, sans-serif;
+  --font-mono: var(--font-outfit), system-ui, sans-serif;
+  --radius-sm: 12px;
+  --radius-md: 14px;
+  --radius-lg: 16px;
+}
+
+/* ---- Color (per style x brightness — 6 combinations) ---- */
+
+[data-style='ledger'][data-theme='light'] {
+  --bg-header: #2b2420;
+  --bg-page: #fffbf5;
+  --bg-anchor: #f1ede4;
+  --bg-surface: #fcfaf5;
+  --bg-field: #ffffff;
+  --ink-primary: #211d17;
+  --ink-muted: #786954;
+  --ink-faint: #bfb5a6;
+  --border-divider: #d9e0e8;
+  --border-subtle: #ccc4b2;
+  --border-strong: #8c806b;
+  --accent: #204631;
+  --accent-ink: #ffffff;
+  --masthead-icon: #ccbfad;
+  --button-primary-hover-bg: #1a5635;
+}
+
+[data-style='ledger'][data-theme='dark'] {
+  --bg-header: #26221a;
+  --bg-page: #161412;
+  --bg-anchor: #1d1b17;
+  --bg-surface: #25221e;
+  --bg-field: #2a2723;
+  --ink-primary: #ece9e5;
+  --ink-muted: #b8a58c;
+  --ink-faint: #736b61;
+  --border-divider: #3d4045;
+  --border-subtle: #4d4740;
+  --border-strong: #8cbf9e;
+  --accent: #6bbd8d;
+  --accent-ink: #161412;
+  --masthead-icon: #f1ede4;
+  --button-primary-hover-bg: #3ea569;
+}
+
+[data-style='clinical'][data-theme='light'] {
+  --bg-header: #384b51;
+  --bg-page: #f8f9f9;
+  --bg-anchor: #f0f2f2;
+  --bg-surface: #f6f7f7;
+  --bg-field: #ffffff;
+  --ink-primary: #25292d;
+  --ink-muted: #8c9499;
+  --ink-faint: #c7cccf;
+  --border-divider: #d9e0e8;
+  --border-subtle: #ccd1d4;
+  --border-strong: #8ca1a1;
+  --accent: #335959;
+  --accent-ink: #ffffff;
+  --masthead-icon: #e7eaea;
+  --button-primary-hover-bg: #1c6868;
+}
+
+[data-style='clinical'][data-theme='dark'] {
+  --bg-header: #1c282b;
+  --bg-page: #131617;
+  --bg-anchor: #191d1e;
+  --bg-surface: #202526;
+  --bg-field: #242a2b;
+  --ink-primary: #e7eaea;
+  --ink-muted: #9dabaf;
+  --ink-faint: #666e70;
+  --border-divider: #384245;
+  --border-subtle: #424d4f;
+  --border-strong: #80bfbf;
+  --accent: #75bfbf;
+  --accent-ink: #131617;
+  --masthead-icon: #c7cccf;
+  --button-primary-hover-bg: #5fcaca;
+}
+
+[data-style='field'][data-theme='light'] {
+  --bg-header: #2b2420;
+  --bg-page: #fbf6f1;
+  --bg-anchor: #f1ede4;
+  --bg-surface: #fcfaf5;
+  --bg-field: #ffffff;
+  --ink-primary: #2b2520;
+  --ink-muted: #948575;
+  --ink-faint: #ccbfad;
+  --border-divider: #d9e0e8;
+  --border-subtle: #d4c7b5;
+  --border-strong: #998066;
+  --accent: #445b44;
+  --accent-ink: #ffffff;
+  --masthead-icon: #ccbfad;
+  --button-primary-hover-bg: #005913;
+}
+
+[data-style='field'][data-theme='dark'] {
+  --bg-header: #26221a;
+  --bg-page: #161412;
+  --bg-anchor: #1d1b17;
+  --bg-surface: #25221e;
+  --bg-field: #2a2723;
+  --ink-primary: #ece9e5;
+  --ink-muted: #b8a58c;
+  --ink-faint: #736b61;
+  --border-divider: #3d4045;
+  --border-subtle: #4d4740;
+  --border-strong: #b2c79e;
+  --accent: #94b88c;
+  --accent-ink: #161412;
+  --masthead-icon: #f1ede4;
+  --button-primary-hover-bg: #85c877;
+}
+
+/* Semantic status/tint tokens — same value across all 3 styles at a given
+   brightness in the current palette, still expressed per [data-style] so a
+   future style-specific override needs no structural change. */
+[data-theme='light'] {
+  --status-good-bg: #dee8de;
+  --status-good-text: #204631;
+  --status-warning-bg: #ede5d1;
+  --status-warning-text: #5e450a;
+  --status-critical-bg: #edd9d9;
+  --status-critical-text: #802121;
+  --status-info-bg: #d9e3ed;
+  --status-info-text: #1a408c;
+  --tile-tint-good: #eef4ee;
+  --tile-tint-warning: #f6f2e8;
+  --tile-tint-critical: #f6ecec;
+  --tile-tint-info: #ecf1f6;
+}
+[data-theme='dark'] {
+  --status-good-bg: #243d30;
+  --status-good-text: #92dbaa;
+  --status-warning-bg: #4d3d1c;
+  --status-warning-text: #f6d190;
+  --status-critical-bg: #522626;
+  --status-critical-text: #f7b2b2;
+  --status-info-bg: #24334d;
+  --status-info-text: #a7c4f5;
+  --tile-tint-good: #1d3228;
+  --tile-tint-warning: #3f3217;
+  --tile-tint-critical: #431f1f;
+  --tile-tint-info: #1d2a3f;
+}
+[data-style='field'][data-theme='light'] {
+  --status-good-bg: #bfe5c9;
+  --status-warning-bg: #f7e09e;
+  --status-warning-text: #5b430a;
+  --status-critical-bg: #f7c4c4;
+  --status-critical-text: #711d1d;
+  --status-info-bg: #c4dbf7;
+  --status-info-text: #183d87;
+  --tile-tint-good: #bfe5c9;
+  --tile-tint-warning: #fbf0cf;
+  --tile-tint-critical: #fbe2e2;
+  --tile-tint-info: #e2edfb;
+}
+[data-style='field'][data-theme='dark'] {
+  --status-good-bg: #294233;
+  --status-good-text: #9ee1b1;
+  --status-warning-bg: #52421f;
+  --status-warning-text: #f7dba3;
+  --status-critical-bg: #572929;
+  --status-critical-text: #f7b9b9;
+  --status-info-bg: #293852;
+  --status-info-text: #b1ccf6;
+  --tile-tint-good: #21362a;
+  --tile-tint-warning: #433619;
+  --tile-tint-critical: #472121;
+  --tile-tint-info: #212e43;
+}
+
+/* ---- Badge colors (light/dark only — do not vary by style) ---- */
+[data-theme='light'] {
+  --badge-red-bg: #e7c3c7;
+  --badge-red-text: #490007;
+  --badge-flame-bg: #f0c0b2;
+  --badge-flame-text: #421500;
+  --badge-amber-bg: #f2debe;
+  --badge-amber-text: #472c00;
+  --badge-yellow-bg: #fdf7c5;
+  --badge-yellow-text: #5f5200;
+  --badge-green-bg: #bdeecc;
+  --badge-green-text: #003c13;
+  --badge-blue-bg: #d1efef;
+  --badge-blue-text: #003133;
+  --badge-violet-bg: #dfddf4;
+  --badge-violet-text: #04002f;
+  /* Recoupment Requested's own color (2026-08-05) — split off violet, which
+     Additional Info Requested also uses, since the two read as the same
+     color stacked in the UI. Text color intentionally unchanged (still
+     violet's), only the background is new. */
+  --badge-lilac-bg: #f1d4ea;
+  --badge-lilac-text: #04002f;
+  /* Confident's own color (2026-08-05) — split off blue, which Needs
+     Approval (status) and Low (severity) also use. Text unchanged (still
+     blue's). */
+  --badge-aqua-bg: #c9ece2;
+  --badge-aqua-text: #003133;
+}
+[data-theme='dark'] {
+  --badge-red-bg: #572626;
+  --badge-red-text: #f7b6b6;
+  --badge-flame-bg: #522e1a;
+  --badge-flame-text: #f7bd94;
+  --badge-amber-bg: #523d1c;
+  --badge-amber-text: #f6d396;
+  --badge-yellow-bg: #4d471a;
+  --badge-yellow-text: #f5e192;
+  --badge-green-bg: #243d29;
+  --badge-green-text: #8cd999;
+  --badge-blue-bg: #212e4d;
+  --badge-blue-text: #9fbff4;
+  --badge-violet-bg: #38264d;
+  --badge-violet-text: #d3b0ed;
+  --badge-lilac-bg: #4f1838;
+  --badge-lilac-text: #d3b0ed;
+  --badge-aqua-bg: #0c3532;
+  --badge-aqua-text: #9fbff4;
+}
+
+/* ---- Sliding-toggle track/thumb defaults — the Claims Card usage; a
+   colored context (StatTiles) overrides both in its own stylesheet, and the
+   cascade means it never has to touch this file. ---- */
+:root {
+  --toggle-track-bg: var(--bg-page);
+  --toggle-thumb-bg: #ffffff;
+}
+[data-theme='dark'] {
+  --toggle-track-bg: var(--bg-surface);
+  --toggle-thumb-bg: var(--bg-page);
+}
+
+/* ---- Animation durations — shared defaults, per the interaction spec ---- */
+:root {
+  --dur-fade-in: 0.24s;
+  --dur-fade-out: 0.32s;
+  --dur-view-switch: 0.24s;
+  --dur-height: 0.4s;
+  --dur-toggle-slide: 0.2s;
+  --dur-scroll-to-new: 0.16s;
+  --ease-standard: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --dur-fade-in: 0.001s;
+    --dur-fade-out: 0.001s;
+    --dur-view-switch: 0.001s;
+    --dur-height: 0.001s;
+    --dur-toggle-slide: 0.001s;
+    --dur-scroll-to-new: 0.001s;
+  }
+}

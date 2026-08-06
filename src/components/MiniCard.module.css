@@ -1,0 +1,54 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 16px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-lg);
+  text-align: left;
+  cursor: pointer;
+  /* Same drop shadow as the shared Button component, rest and hover alike —
+     the whole card is a button now, so it gets the same treatment. */
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+  transition: box-shadow 0.15s ease;
+}
+.card:hover,
+.card:focus-visible,
+.card:active {
+  box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.25);
+}
+
+.badgeRow {
+  display: flex;
+  gap: 8px;
+}
+
+.summaryLine {
+  font-size: 0.8125rem;
+  font-family: var(--font-mono);
+}
+
+.categoryLine {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.recommendation {
+  font-size: 0.8125rem;
+}
+.recommendation b {
+  color: var(--accent);
+}
+
+.link {
+  align-self: flex-start;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+.card:hover .link,
+.card:focus-visible .link {
+  text-decoration: underline;
+}

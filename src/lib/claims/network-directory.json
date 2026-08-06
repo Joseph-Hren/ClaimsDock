@@ -16,6 +16,25 @@
     { "provider_npi": "1922334455", "provider_name": "Meridian Pain & Wellness Center", "network_status": "in-network" },
     { "provider_npi": "1355908214", "provider_name": "Valleybrook Urgent Care", "network_status": "in-network" },
     { "provider_npi": "1744903358", "provider_name": "Dr. Marcus Feld, MD (Internal Medicine)", "network_status": "in-network" },
-    { "provider_npi": "1377502246", "provider_name": "Bay Area Regional Hospital", "network_status": "out-of-network" }
+    { "provider_npi": "1377502246", "provider_name": "North Forks Regional Hospital", "network_status": "out-of-network" },
+
+    { "provider_npi": "1600112233", "provider_name": "Dr. Anjali Rao, MD (Cardiology)", "network_status": "in-network" },
+    { "provider_npi": "1600112244", "provider_name": "Dr. Yusuf Karimi, MD (Endocrinology)", "network_status": "in-network" },
+    { "provider_npi": "1600112255", "provider_name": "Summit Ridge OB/GYN Associates", "network_status": "in-network" },
+    { "provider_npi": "1600112266", "provider_name": "Dr. Naomi Fitzgerald, MD (Psychiatry)", "network_status": "in-network" },
+    { "provider_npi": "1600112277", "provider_name": "Coastal Gastroenterology Group", "network_status": "in-network" },
+    { "provider_npi": "1600112288", "provider_name": "Dr. Simon Okafor, MD (Nephrology)", "network_status": "out-of-network" },
+    { "provider_npi": "1600112299", "provider_name": "Pinehurst ENT & Sinus Center", "network_status": "in-network" },
+    { "provider_npi": "1600113300", "provider_name": "Dr. Wanda Liu, MD (Rheumatology)", "network_status": "in-network" },
+    { "provider_npi": "1600113311", "provider_name": "Fenwick Family Wellness Clinic", "network_status": "in-network" },
+    { "provider_npi": "1600113322", "provider_name": "Redwood Ambulatory Surgical Center", "network_status": "in-network" },
+    { "provider_npi": "1600113333", "provider_name": "Harborline Diagnostic Imaging", "network_status": "in-network" },
+    { "provider_npi": "1600113344", "provider_name": "Dr. Colin Bramwell, MD (General Surgery)", "network_status": "in-network" },
+    { "provider_npi": "1600113355", "provider_name": "Juniper Family Medicine", "network_status": "in-network" },
+    { "provider_npi": "1600113366", "provider_name": "Dr. Farrah Delacroix, MD (Dermatology)", "network_status": "in-network" },
+    { "provider_npi": "1600113377", "provider_name": "Cedarbrook Home Health & DME Supply", "network_status": "in-network" },
+    { "provider_npi": "1600113388", "provider_name": "Trailhead Urgent Care", "network_status": "in-network" },
+    { "provider_npi": "1600113399", "provider_name": "Mercy Point Community Hospital", "network_status": "out-of-network" },
+    { "provider_npi": "1600113400", "provider_name": "Dr. Preston Okwuosa, MD (Internal Medicine)", "network_status": "in-network" }
   ]
 }

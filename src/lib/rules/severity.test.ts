@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { baseSeverityBand, computeSeverity } from './severity';
+import { baseSeverityBand, computeSeverity, resolveSeverity } from './severity';
 
 describe('baseSeverityBand', () => {
   it('bands by dollar amount per Section 7b', () => {
@@ -43,5 +43,27 @@ describe('computeSeverity', () => {
 
   it('does not downgrade an already-higher band when medical necessity is disputed', () => {
     expect(computeSeverity({ billedAmount: 30000, disputedMedicalNecessity: true, slaPercentRemaining: 0.9 })).toBe('Critical');
+  });
+});
+
+describe('resolveSeverity', () => {
+  it('resets to Low on Resolved, regardless of dollar amount or SLA breach', () => {
+    expect(
+      resolveSeverity({ status: 'Resolved', billedAmount: 30000, disputedMedicalNecessity: true, slaPercentRemaining: -0.5 }),
+    ).toBe('Low');
+  });
+
+  it('resets to Low on Denied, regardless of dollar amount or SLA breach', () => {
+    expect(
+      resolveSeverity({ status: 'Denied', billedAmount: 30000, disputedMedicalNecessity: true, slaPercentRemaining: -0.5 }),
+    ).toBe('Low');
+  });
+
+  it('computes normally (no reset) for every other status', () => {
+    const params = { billedAmount: 6000, disputedMedicalNecessity: false, slaPercentRemaining: 0.1 };
+    expect(resolveSeverity({ status: 'Submitted, flagged', ...params })).toBe(computeSeverity(params));
+    expect(resolveSeverity({ status: 'Needs Approval', ...params })).toBe(computeSeverity(params));
+    expect(resolveSeverity({ status: 'Escalated', ...params })).toBe(computeSeverity(params));
+    expect(resolveSeverity({ status: 'Additional Info Requested', ...params })).toBe(computeSeverity(params));
   });
 });

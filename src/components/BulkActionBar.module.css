@@ -1,0 +1,27 @@
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 20px;
+  margin-bottom: 16px;
+  background: var(--bg-anchor);
+  border-radius: var(--radius-md);
+}
+
+.count {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-primary);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.unavailable {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}

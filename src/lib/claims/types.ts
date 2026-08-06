@@ -32,7 +32,7 @@ export type UrgencyTarget = 'fresh' | 'mid' | 'near_deadline' | 'breached';
 export interface Patient {
   name: string;
   dob: string; // YYYY-MM-DD
-  sex: 'M' | 'F';
+  sex: 'M' | 'F' | 'NB';
   member_id: string;
 }
 
@@ -164,5 +164,6 @@ export interface MemberAccumulatorEntry {
   plan_year: number;
   deductible_individual_limit: number;
   deductible_remaining: number; // as of the reference point below
+  inpatient_days_used_this_plan_year: number; // toward CAPS.inpatientBenefitDaysPerPlanYear
   as_of: string; // YYYY-MM-DD — accumulators are a snapshot, not live data
 }

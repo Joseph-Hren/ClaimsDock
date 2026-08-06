@@ -5,7 +5,7 @@
       "provider_name": "Meridian Pain & Wellness Center",
       "trailing_6mo_avg_monthly_claims": 4,
       "current_month_claims": 13,
-      "note": "3.25x its trailing 6-month average — the FinCEN-documented volume-spike red flag. Bills FRD-PHANTOM-01, FRD-UNBUNDLE-01, and FRD-DOUBLEBILL-01 in this seed set; the other ~10 current-month claims implied by this count are not materialized as individual records (this is aggregate ground truth for the Pipeline to cite, not a claims history to browse)."
+      "note": "3.25x its trailing 6-month average — the FinCEN-documented volume-spike red flag. Multiple claims in this seed set from this provider show real fraud patterns (phantom billing, unbundling, double billing); the remaining current-month claims implied by this count are not materialized as individual records (this is aggregate ground truth for the Pipeline to cite, not a claims history to browse)."
     },
     {
       "provider_npi": "1720456391",
@@ -20,6 +20,13 @@
       "trailing_6mo_avg_monthly_claims": 340,
       "current_month_claims": 355,
       "note": "High-volume ER facility, normal variance — a large absolute claim count is not itself a red flag without a baseline to compare against, which is the point of this dataset existing."
+    },
+    {
+      "provider_npi": "1600113311",
+      "provider_name": "Fenwick Family Wellness Clinic",
+      "trailing_6mo_avg_monthly_claims": 5,
+      "current_month_claims": 17,
+      "note": "3.4x its trailing 6-month average — a second, independent volume-spike example (Phase 13 Pass F) alongside Meridian Pain & Wellness Center, so the pattern isn't tied to a single provider in the seed set. Several claims in this set from this provider show real fraud patterns (phantom billing, unbundling, double billing)."
     }
   ]
 }

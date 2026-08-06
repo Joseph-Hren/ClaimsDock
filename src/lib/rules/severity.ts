@@ -3,6 +3,8 @@
 // remaining. Never a judgment call, never asked of the model, never cached —
 // recalculated live every time it's needed (see sla.ts for the same rule).
 
+import type { ClaimStatus } from './status';
+
 export type SeverityBand = 'Low' | 'Moderate' | 'High' | 'Critical';
 
 const BAND_ORDER: SeverityBand[] = ['Low', 'Moderate', 'High', 'Critical'];
@@ -54,4 +56,43 @@ export function computeSeverity(params: {
   // >= 50% remaining: no change.
 
   return band;
+}
+
+/**
+ * The display severity for a claim's *current* status — project-spec.txt
+ * Section 7b, added 2026-07-28. Once a claim reaches a real decision
+ * (Resolved or Denied), severity is always Low: there's no time-dependence
+ * to it at all, since this system doesn't simulate reimbursement/payment
+ * timing (Explicit Non-Goals) and continuing to escalate severity against a
+ * deadline nothing here tracks completion of would be fabricating a number.
+ * Every other status (including Additional Info Requested, Escalated, and
+ * anything still pending) computes normally — Additional Info Requested
+ * comes out frozen on its own, since computeSeverity's slaPercentRemaining
+ * input already reflects the missing-info hold's stopped clock (sla.ts,
+ * temporary-hold.ts) rather than needing a separate freeze here.
+ *
+ * Recoupment Requested (added 2026-07-30) is a fixed override too, for the
+ * same reason — no real timeline to compute against — but fixed to High
+ * rather than Low. Severity does double duty here as both computed urgency
+ * and "don't let this disappear in a worklist"; a plain Resolved claim is
+ * genuinely done, but one now under recoupment is exactly the kind of
+ * exception a severity-sorted or severity-filtered view exists to surface.
+ */
+export function resolveSeverity(params: {
+  status: ClaimStatus;
+  billedAmount: number;
+  disputedMedicalNecessity: boolean;
+  slaPercentRemaining: number;
+}): SeverityBand {
+  if (params.status === 'Resolved' || params.status === 'Denied') {
+    return 'Low';
+  }
+  if (params.status === 'Recoupment Requested') {
+    return 'High';
+  }
+  return computeSeverity({
+    billedAmount: params.billedAmount,
+    disputedMedicalNecessity: params.disputedMedicalNecessity,
+    slaPercentRemaining: params.slaPercentRemaining,
+  });
 }

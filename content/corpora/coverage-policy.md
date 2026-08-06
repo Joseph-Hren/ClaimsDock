@@ -1,16 +1,5 @@
 # Coverage & Adjudication Policy
 
-**Source:** Fully synthetic, written in-house for ClaimsDock. Not sourced from
-any real insurer's contract — structurally realistic, invented specifics.
-Used by the Evaluation Pipeline's deterministic coverage-math layer and by
-Anchor's Reference Lookup and per-claim citations.
-
-*This document is generated from `src/lib/rules/coverage-constants.ts` by
-`scripts/generate-coverage-policy.ts` — the numbers below and the ones the
-coverage-math calculation actually uses come from the same source, on
-purpose. Do not hand-edit the numbers in this file; edit the constants
-module and regenerate instead.*
-
 ## Plan Coverage by Procedure Type
 
 | Procedure category | Standard coverage (in-network, post-deductible) |
@@ -72,7 +61,11 @@ module and regenerate instead.*
 - Physical/occupational therapy: 30 visits per
   plan year, combined.
 - Inpatient benefit days: 60 days per
-  plan year at full coverage; days beyond that are covered at a reduced
-  per-diem rate rather than a hard cutoff, so a multi-day stay can cross this
-  cap partway through — another mid-claim coverage-math scenario, not a
-  judgment call.
+  plan year at full coverage; days beyond that are covered at
+  50% of the normal rate rather than a hard
+  cutoff, so a multi-day stay can cross this cap partway through — another
+  mid-claim coverage-math scenario, not a judgment call.
+
+## Fraud, Misrepresentation, and Non-Payable Claims
+
+- Benefits are not payable for any claim or portion of a claim involving fraud, intentional misrepresentation, or abusive billing practices — including, but not limited to, phantom billing, upcoding, unbundling, double billing, and billing for medically unnecessary or substandard care (see the Fraud-Indicator Reference for the recognized typology). This applies regardless of whether the claim would otherwise satisfy standard coverage criteria, network status, or prior-authorization requirements described elsewhere in this policy — a claim exhibiting one or more of these patterns is non-payable on that basis alone.

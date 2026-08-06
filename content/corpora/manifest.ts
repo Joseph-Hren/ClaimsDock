@@ -17,7 +17,13 @@ export const CORPORA: CorpusEntry[] = [
     title: 'Coverage & Adjudication Policy',
     file: 'coverage-policy.md',
     sourced: false,
-    citation: 'Fully synthetic, written in-house for ClaimsDock — not sourced from any real insurer contract.',
+    // Only the "sourced: false" flag above (not read into any prompt) still
+    // marks this as synthetic for our own tracking — the citation string
+    // itself is injected verbatim into what a model sees (context.ts's
+    // source="..." attribute), so it can't say anything revealing that this
+    // is a generated project artifact rather than a real plan document
+    // (found live, 2026-08-01 — this string used to say exactly that).
+    citation: 'Internal plan document — Coverage & Adjudication Policy, current plan year.',
   },
   {
     id: 'fraud-indicator-reference',

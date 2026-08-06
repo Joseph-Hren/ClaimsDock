@@ -69,7 +69,13 @@ export function chunkMarkdown(corpus: CorpusEntry, markdown: string): Chunk[] {
 
 /** Loads and chunks all three corpora listed in the manifest. */
 export function chunkAllCorpora(): Chunk[] {
-  const corporaDir = join(__dirname, '..', '..', '..', 'content', 'corpora');
+  // process.cwd(), not __dirname — same fix as lib/pipeline/context.ts
+  // (Pass A1), same root cause: this code was never actually bundled into a
+  // real Next.js route handler before Pass A2 (only tsx scripts and Vitest,
+  // both of which happen to leave __dirname resolving correctly, masking
+  // the difference). Turbopack relocates the compiled chunk for route
+  // handlers, so __dirname no longer points at this file's real directory.
+  const corporaDir = join(process.cwd(), 'content', 'corpora');
   return CORPORA.flatMap((corpus) => {
     const markdown = readFileSync(join(corporaDir, corpus.file), 'utf8');
     return chunkMarkdown(corpus, markdown);

@@ -9,13 +9,22 @@
     "lint": "eslint",
     "validate:claims": "tsx scripts/validate-claims.ts",
     "generate:coverage-policy": "tsx scripts/generate-coverage-policy.ts",
+    "smoke:pipeline": "tsx --env-file=.env.local scripts/smoke-test-pipeline.ts",
+    "smoke:router": "tsx --env-file=.env.local scripts/smoke-test-router.ts",
+    "smoke:humangate": "tsx --env-file=.env.local scripts/smoke-test-humangate.ts",
+    "compare:providers": "tsx --env-file=.env.local scripts/compare-providers.ts",
+    "validate:deny-guardrail": "tsx --env-file=.env.local scripts/validate-deny-guardrail.ts",
     "test": "vitest run"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.115.0",
     "@huggingface/transformers": "^4.2.0",
     "next": "16.2.12",
+    "openai": "^7.3.0",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "@types/node": "^20",
@@ -23,6 +32,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.12",
+    "jsdom": "^30.0.0",
     "tsx": "^4.23.1",
     "typescript": "^5",
     "vitest": "^4.1.10"

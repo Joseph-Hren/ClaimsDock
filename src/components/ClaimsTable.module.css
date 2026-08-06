@@ -1,0 +1,188 @@
+.wrap {
+  padding: 20px 24px 24px;
+}
+
+/* The real fix for the Anchor-panel/table overlap: once the table's natural
+   content width (many nowrap columns) is wider than the space actually
+   available, it scrolls within its own bounds instead of visually
+   overflowing into whatever sits next to it. Scoped to just the table, not
+   .wrap, so the list header and pagination stay put above/below it. */
+.tableScroll {
+  overflow-x: auto;
+}
+
+.listHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.listTitle {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 280px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--bg-field);
+  color: var(--ink-muted);
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  background: none;
+  font-size: 0.8125rem;
+  color: var(--ink-primary);
+}
+.searchInput:focus {
+  outline: none;
+}
+
+.searchClear {
+  display: flex;
+  align-items: center;
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+  cursor: pointer;
+}
+.searchClear:hover,
+.searchClear:focus-visible {
+  color: var(--ink-primary);
+}
+
+.table {
+  /* min-width, not width — width:100% meant the table could never be wider
+     than its scroll container, so there was nothing for overflow-x to ever
+     scroll; columns just got compressed instead. min-width still keeps it
+     filling the available space at comfortable widths, but lets it grow
+     past that (and become scrollable) once content actually needs to. */
+  min-width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.table th,
+.table td {
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-divider);
+  white-space: nowrap;
+}
+
+.headerRow th {
+  color: var(--ink-muted);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: none;
+}
+
+.headerLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sortGroup {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.sortLabel {
+  color: inherit;
+  font: inherit;
+  font-weight: inherit;
+}
+.sortLabel:hover {
+  color: var(--ink-primary);
+}
+
+.sortCaretButton {
+  display: inline-flex;
+  color: var(--ink-muted);
+}
+.sortCaretButton:hover,
+.sortCaretButton:focus-visible {
+  color: var(--ink-primary);
+}
+
+.caret {
+  flex-shrink: 0;
+}
+
+.checkboxCell {
+  width: 32px;
+}
+
+.row {
+  cursor: pointer;
+  transition: background-color 0.12s ease;
+}
+.row:hover {
+  background: var(--bg-surface);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.truncate {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Patient isn't truncated at comfortable widths, but gets the same ellipsis
+   treatment once space is tight — clicking the row always reveals the full
+   name in the card either way, same reasoning as Provider below. */
+.truncatePatient {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.slaBreached {
+  color: var(--status-critical-text);
+  font-weight: 600;
+}
+
+.slaRemainingWord {
+  display: inline;
+}
+
+@media (max-width: 1439px) {
+  /* Reachable from the Claims Card's own "Linked claim" link instead, and
+     was never a real link in the table to begin with — dropping it here is
+     real width back for the columns that stay, not a lost feature. */
+  .linkedCell {
+    display: none;
+  }
+}
+
+@media (max-width: 1599px) {
+  /* A deliberate rule, not the accidental cell-clipping it was riding on
+     before — the icon is the first thing to go when space is tight, kept
+     to the same 1600px tier as the other responsive column changes below. */
+  .statusCell svg {
+    display: none;
+  }
+  .truncate {
+    max-width: 140px;
+  }
+  .truncatePatient {
+    max-width: 130px;
+  }
+  .slaRemainingWord {
+    display: none;
+  }
+}

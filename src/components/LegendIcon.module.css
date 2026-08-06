@@ -1,0 +1,65 @@
+.icon {
+  display: inline-flex;
+  color: var(--status-info-text);
+}
+
+.legend {
+  /* The real bug wasn't the box width — it was Badge.module.css's own
+     .badge { white-space: nowrap }, which is correct for the table (where
+     badges must never wrap) but was silently overriding any width fix
+     tried here, since a nowrap badge can't shrink below its full-text
+     width no matter how much room its container has. .legendBadge below
+     overrides that, specifically for this context. 320px is enough once
+     the badge can actually wrap; kept here rather than pushed back down
+     further, so short 2-3 word descriptions still read as short lines. */
+  width: 320px;
+  max-width: min(320px, calc(100vw - 32px));
+  padding: 20px;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* Overrides Badge's own white-space: nowrap (necessary in the table, wrong
+   here) — !important because a plain class-cascade override isn't reliable
+   against a CSS-Modules-hashed .badge rule from another file whose bundled
+   order isn't guaranteed to land after this one. */
+.legendBadge {
+  white-space: normal !important;
+  overflow-wrap: anywhere;
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-divider);
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.itemDescription {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--ink-muted);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}

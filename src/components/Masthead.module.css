@@ -1,0 +1,35 @@
+.masthead {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 24px;
+  background: var(--bg-header);
+  color: var(--bg-page);
+}
+
+.logo {
+  height: 24px;
+  width: auto;
+}
+
+.icons {
+  display: flex;
+  gap: 8px;
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  color: var(--masthead-icon);
+  opacity: 0.85;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+}
+.iconButton:hover {
+  background: rgba(255, 255, 255, 0.1);
+  opacity: 1;
+}

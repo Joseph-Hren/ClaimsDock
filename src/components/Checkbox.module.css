@@ -1,0 +1,74 @@
+.wrap {
+  position: relative;
+  display: inline-flex;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Two concentric layers, matching the real Figma component: a larger
+   highlight area (this one) that stays transparent at rest and only shows
+   its tint on hover, and a smaller bordered box (below) inset 2px inside
+   it — the actual checkbox glyph. That inset gap is what makes the hover
+   tint visibly extend past the glyph's own border, not just recolor it. */
+.highlight {
+  position: absolute;
+  inset: 0;
+  /* Fixed, not var(--radius-md) — that token swings from 3px (Ledger) to
+     14px (Field), and 14px on a 20px box reads as a circle, not a checkbox.
+     A checkbox's corner radius is its own fixed constant across all styles,
+     unlike buttons/panels/etc. which are meant to track the style's radius. */
+  border-radius: 4px;
+  background: transparent;
+  pointer-events: none;
+  transition: background-color 0.15s ease;
+}
+
+.box {
+  position: absolute;
+  inset: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  border: 1.5px solid var(--border-strong);
+  background: var(--bg-field);
+  color: transparent;
+  pointer-events: none;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+/* Rest/hover/focus/pressed all get the same tinted-background treatment,
+   same convention as the Button component — never three different looks. */
+.input:hover ~ .highlight,
+.input:focus-visible ~ .highlight,
+.input:active ~ .highlight {
+  background: var(--status-good-bg);
+}
+
+.input:checked ~ .box {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+}
+
+.input:checked:hover ~ .highlight,
+.input:checked:focus-visible ~ .highlight,
+.input:checked:active ~ .highlight {
+  background: var(--status-good-bg);
+}
+
+.input:focus-visible ~ .box {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

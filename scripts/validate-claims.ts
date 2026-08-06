@@ -12,8 +12,8 @@ const VALID_SCENARIOS = ['clean', 'ambiguous', 'missing-data', 'complex-math', '
 const VALID_SLA_TIERS = ['standard', 'urgent'];
 const VALID_URGENCY = ['fresh', 'mid', 'near_deadline', 'breached'];
 
-let errors: string[] = [];
-let warnings: string[] = [];
+const errors: string[] = [];
+const warnings: string[] = [];
 
 function isWhitelisted(claim: Claim, fieldPath: string): boolean {
   return claim._testMeta.deliberately_missing_field === fieldPath;
@@ -50,7 +50,10 @@ function validateUB04(c: UB04Claim) {
 }
 
 function main() {
-  const claims = generateClaims();
+  // generateClaims() defaults to the full authored set now that Pass G's
+  // live-app cap is gone — explicit here anyway so this validator keeps
+  // checking everything even if a future caller narrows the default.
+  const claims = generateClaims(new Date(), Infinity);
   const idSet = new Set<string>();
 
   claims.forEach((c) => {
@@ -80,13 +83,13 @@ function main() {
   // Scenario distribution should match project-spec.txt Section 10 exactly.
   const scenarioCounts: Record<string, number> = {};
   claims.forEach((c) => { scenarioCounts[c._testMeta.scenario] = (scenarioCounts[c._testMeta.scenario] || 0) + 1; });
-  const expected: Record<string, number> = { clean: 4, ambiguous: 3, 'missing-data': 3, 'complex-math': 3, fraud: 7 };
+  const expected: Record<string, number> = { clean: 71, ambiguous: 6, 'missing-data': 11, 'complex-math': 21, fraud: 23 };
   Object.entries(expected).forEach(([scenario, count]) => {
     if (scenarioCounts[scenario] !== count) {
       errors.push(`Scenario "${scenario}" has ${scenarioCounts[scenario] || 0} records, expected ${count}`);
     }
   });
-  if (claims.length !== 20) errors.push(`Expected 20 total claims, found ${claims.length}`);
+  if (claims.length !== 132) errors.push(`Expected 132 total claims, found ${claims.length}`);
 
   // Volume-spike provider referenced in provider-history.json should actually
   // appear on at least 2 claims in the seed set (the pattern being demonstrated).

@@ -1,0 +1,222 @@
+.card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.25),
+    0 4px 12px rgba(0, 0, 0, 0.12);
+  padding: 24px;
+  font-size: 0.875rem;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.claimId {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.close {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.badgeRow {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 16px;
+}
+
+.badgeColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.badgeLabel {
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+}
+
+.badgeLabelInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  width: fit-content;
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+}
+
+.infoGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+  margin-bottom: 24px;
+  font-size: 0.8125rem;
+}
+
+.infoLabel {
+  color: var(--ink-muted);
+}
+
+.linkedClaimLink {
+  color: var(--accent);
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+.linkedClaimLink:hover {
+  text-decoration: underline;
+}
+
+.divider {
+  height: 1px;
+  background: var(--border-divider);
+  margin: 16px 0;
+}
+
+.animatedHeight {
+  overflow: hidden;
+  transition: height var(--dur-height) var(--ease-standard);
+}
+
+.fadeContent {
+  animation: content-fade-in var(--dur-view-switch) var(--ease-standard);
+}
+
+@keyframes content-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sectionLabel {
+  color: var(--ink-muted);
+  font-size: 0.75rem;
+  margin-bottom: 4px;
+}
+
+.careLine,
+.auditEntryHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 4px 0;
+}
+
+/* Wraps up to 2 lines, then truncates with an ellipse — descriptions now
+   combine a procedure/revenue code's own label with its diagnosis (e.g.
+   "Office visit — right knee pain"), which reads better allowed to wrap
+   occasionally than force-fit onto one line, but still needs a hard ceiling
+   so one long combination can't grow a claim card's height unboundedly. A
+   plain single-line ellipsis (the old approach) truncates too eagerly now
+   that combined descriptions are routinely longer than a bare code label.
+   align-items: flex-start above keeps units/charge pinned to the first line
+   rather than trying to vertically center against a 2-line block. */
+.careLineDescription {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}
+
+.careLineRight {
+  display: inline-flex;
+  gap: 16px;
+  color: var(--ink-muted);
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.careLineUnits {
+  color: var(--ink-muted);
+}
+
+.careLineCharge {
+  color: var(--ink-primary);
+}
+
+.evidenceList {
+  list-style: disc;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.evidenceItem {
+  line-height: 1.5;
+}
+
+.recommendation b {
+  color: var(--accent);
+}
+
+.recommendationNarrative {
+  margin-top: 4px;
+  line-height: 1.5;
+  color: var(--ink-muted);
+}
+
+.fieldsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px 20px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.fieldLabel {
+  font-size: 0.6875rem;
+  color: var(--ink-muted);
+}
+
+.fieldValue {
+  font-size: 0.8125rem;
+}
+
+.auditEntry {
+  border: 1px solid var(--border-divider);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.auditEntryBody {
+  font-size: 0.8125rem;
+  margin-top: 4px;
+}
+
+.addNoteButton {
+  align-self: flex-start;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 8px 14px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.actionRow {
+  display: flex;
+  gap: 10px;
+}

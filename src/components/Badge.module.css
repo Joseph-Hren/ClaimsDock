@@ -1,0 +1,48 @@
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border-radius: var(--radius-lg);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.red {
+  background: var(--badge-red-bg);
+  color: var(--badge-red-text);
+}
+.flame {
+  background: var(--badge-flame-bg);
+  color: var(--badge-flame-text);
+}
+.amber {
+  background: var(--badge-amber-bg);
+  color: var(--badge-amber-text);
+}
+.yellow {
+  background: var(--badge-yellow-bg);
+  color: var(--badge-yellow-text);
+}
+.green {
+  background: var(--badge-green-bg);
+  color: var(--badge-green-text);
+}
+.blue {
+  background: var(--badge-blue-bg);
+  color: var(--badge-blue-text);
+}
+.violet {
+  background: var(--badge-violet-bg);
+  color: var(--badge-violet-text);
+}
+.lilac {
+  background: var(--badge-lilac-bg);
+  color: var(--badge-lilac-text);
+}
+.aqua {
+  background: var(--badge-aqua-bg);
+  color: var(--badge-aqua-text);
+}

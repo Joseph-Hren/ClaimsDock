@@ -1,0 +1,48 @@
+.page {
+  position: relative;
+  /* Fixed, not min — a floor lets everything downstream (Anchor's
+     scrolling history included) grow past the viewport and hand scrolling
+     to the whole window instead of the intended internal containers. */
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.mainColumn {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tableRegion {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.tableScroll {
+  /* Scrolls internally instead of the whole page, now that .page is a fixed
+     viewport height — kept as its own inner wrapper, separate from
+     .tableRegion itself, so the claim-card/overlay ModalLayer (positioned
+     absolute against .tableRegion, unchanged) stays anchored to the visible
+     viewport rather than scrolling away with the table's own content. */
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.fullPageShadeWrap {
+  position: fixed;
+  inset: 0;
+}

@@ -4,6 +4,15 @@
 // next run. Prose/framing below is hand-written; only the numbers are pulled
 // from the constants module, so the citable document and the calculation
 // layer can never drift apart.
+//
+// Deliberately no "Source:"/"this document is generated" header in the
+// output itself (found live, 2026-08-01): this file is read whole into both
+// the Pipeline's full-context prompt and Anchor's retrieval index, and any
+// meta-commentary revealing it's a generated project artifact — not a real
+// plan document — was appearing verbatim in Anchor's actual answers to
+// direct questions. Provenance (it's synthetic, generated from
+// coverage-constants.ts) lives in this comment and in manifest.ts's own
+// `citation`/`sourced` fields instead, neither of which reach a model.
 
 import { writeFileSync } from 'fs';
 import { join } from 'path';
@@ -14,6 +23,7 @@ import {
   CAPS,
   PRIOR_AUTH_TYPICALLY_REQUIRED,
   PRIOR_AUTH_NOT_REQUIRED,
+  FRAUD_NONPAYMENT_PROVISION,
 } from '../src/lib/rules/coverage-constants';
 
 function pct(fraction: number): string {
@@ -30,17 +40,6 @@ function buildCoverageTable(): string {
 }
 
 const doc = `# Coverage & Adjudication Policy
-
-**Source:** Fully synthetic, written in-house for ClaimsDock. Not sourced from
-any real insurer's contract — structurally realistic, invented specifics.
-Used by the Evaluation Pipeline's deterministic coverage-math layer and by
-Anchor's Reference Lookup and per-claim citations.
-
-*This document is generated from \`src/lib/rules/coverage-constants.ts\` by
-\`scripts/generate-coverage-policy.ts\` — the numbers below and the ones the
-coverage-math calculation actually uses come from the same source, on
-purpose. Do not hand-edit the numbers in this file; edit the constants
-module and regenerate instead.*
 
 ## Plan Coverage by Procedure Type
 
@@ -88,10 +87,14 @@ ${PRIOR_AUTH_NOT_REQUIRED.map((item) => `- ${item}`).join('\n')}
 - Physical/occupational therapy: ${CAPS.therapyVisitsPerPlanYear} visits per
   plan year, combined.
 - Inpatient benefit days: ${CAPS.inpatientBenefitDaysPerPlanYear} days per
-  plan year at full coverage; days beyond that are covered at a reduced
-  per-diem rate rather than a hard cutoff, so a multi-day stay can cross this
-  cap partway through — another mid-claim coverage-math scenario, not a
-  judgment call.
+  plan year at full coverage; days beyond that are covered at
+  ${CAPS.inpatientPostCapCoverage * 100}% of the normal rate rather than a hard
+  cutoff, so a multi-day stay can cross this cap partway through — another
+  mid-claim coverage-math scenario, not a judgment call.
+
+## Fraud, Misrepresentation, and Non-Payable Claims
+
+- ${FRAUD_NONPAYMENT_PROVISION}
 `;
 
 const outPath = join(__dirname, '..', 'content', 'corpora', 'coverage-policy.md');

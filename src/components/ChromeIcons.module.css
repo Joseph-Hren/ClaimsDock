@@ -1,0 +1,38 @@
+/* Only AnchorLogo's optional shimmer sweep needs actual CSS — every other
+   icon in this file stays plain inline SVG with no external styling, on
+   purpose. Clipped to the logo's silhouette via the mask-image set inline
+   (see ChromeIcons.tsx). A soft glow band sweeps left to right via
+   background-position, while the element's own opacity — animated in the
+   same keyframes — fades it in from 0 as it starts moving and back to 0 by
+   the time it finishes, so each pass is a single clean fade-in/move/fade-out
+   with nothing visible at the loop boundary to jump-cut (rewritten
+   2026-08-05 — the previous version faked the fade via the gradient's own
+   transparency stops, which read as a flash rather than a glow). */
+.shimmerSweep {
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.9) 50%, transparent 100%);
+  background-size: 50% 100%;
+  background-repeat: no-repeat;
+  animation: anchorLogoShimmer 2.4s ease-in-out infinite;
+}
+
+@keyframes anchorLogoShimmer {
+  0% {
+    background-position: 0% 0;
+    opacity: 0;
+  }
+  50% {
+    background-position: 50% 0;
+    opacity: 1;
+  }
+  100% {
+    background-position: 100% 0;
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmerSweep {
+    animation: none;
+    opacity: 0;
+  }
+}

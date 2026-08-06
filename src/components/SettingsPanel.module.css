@@ -1,0 +1,115 @@
+.panel {
+  /* Previously borrowed position/background/shadow from Popover.module.css
+     (shared visual language, not the Popover component itself) — pulled in
+     directly here instead, since that shared file's .panel is now portal-
+     specific (fixed position, no ancestor to anchor to) for the legend
+     popovers, which this dropdown never used. */
+  position: absolute;
+  top: 62px;
+  right: 24px;
+  z-index: 40;
+  background: var(--bg-surface);
+  border-radius: var(--radius-md);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.1);
+  width: 360px;
+  /* Extra 8px at the bottom specifically — beyond the uniform 20px every
+     other edge gets — so the panel doesn't end flush right against the
+     last link. */
+  padding: 20px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Dark mode's shadow needs to work harder — a black shadow reads clearly
+   against the light dashboard behind it in light mode, but the same shadow
+   barely registers against an already-dark page. Same recipe, just a wider
+   blur/spread on the primary layer so it still visibly separates the panel
+   from the dashboard. */
+[data-theme='dark'] .panel {
+  box-shadow:
+    0 8px 26px 20px rgba(0, 0, 0, 0.18),
+    0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+}
+
+.divider {
+  height: 1px;
+  flex-shrink: 0;
+  background: var(--border-divider);
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionLabel {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.modelDescription {
+  font-size: 0.75rem;
+  color: var(--ink-primary);
+  line-height: 1.5;
+}
+
+.howSection {
+  display: flex;
+  flex-direction: column;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-divider);
+}
+
+.howTitle {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  color: var(--ink-muted);
+  margin-bottom: 10px;
+}
+
+.howText {
+  font-size: 0.75rem;
+  color: var(--ink-primary);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.diagramThumb {
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+
+.diagramThumbImg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+  /* An inset box-shadow instead of a real border — a plain border on the
+     wrapping button clipped visibly at the corners in Clinical/Field's
+     larger radii, since overflow:hidden's clip and the border's own curve
+     didn't perfectly agree at those larger radii. box-shadow, drawn on the
+     image itself with the same border-radius, conforms exactly regardless
+     of how round the corner is. */
+  box-shadow: inset 0 0 0 1px var(--ink-muted);
+}
+
+.diagramLink {
+  align-self: flex-start;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent);
+  white-space: nowrap;
+}
+.diagramLink:hover {
+  text-decoration: underline;
+}

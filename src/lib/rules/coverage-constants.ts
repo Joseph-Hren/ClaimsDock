@@ -37,6 +37,11 @@ export const NETWORK = {
 export const CAPS = {
   therapyVisitsPerPlanYear: 30,
   inpatientBenefitDaysPerPlanYear: 60,
+  // The generated policy doc below has always said days beyond the cap are
+  // "covered at a reduced per-diem rate rather than a hard cutoff" — but no
+  // actual rate backed that claim anywhere in the codebase until now (found
+  // while building the day-cap calculator, Phase 11 Pass A1).
+  inpatientPostCapCoverage: 0.5,
 };
 
 export const PRIOR_AUTH_TYPICALLY_REQUIRED = [
@@ -52,6 +57,19 @@ export const PRIOR_AUTH_NOT_REQUIRED = [
   'Preventive screenings',
   'Physical/occupational therapy within the standard visit allowance',
 ];
+
+// Found missing live, 2026-08-06 — a real gap, not an oversight caught in
+// review: the Deny justification guardrail correctly, repeatedly rejected
+// field 2 (plan/policy provision cited) on real fraud-category denials,
+// because there was genuinely nothing in this policy for a citation to
+// point to — no provision anywhere stated that a fraudulently billed claim
+// is non-payable at all. Standard boilerplate in any real insurance policy
+// (a "fraud and misrepresentation" exclusion is one of the most common
+// clauses there is); its total absence here meant field 2 could never be
+// satisfied for a fraud denial no matter how well-drafted, which is a
+// corpus gap, not a prompt-tuning problem.
+export const FRAUD_NONPAYMENT_PROVISION =
+  'Benefits are not payable for any claim or portion of a claim involving fraud, intentional misrepresentation, or abusive billing practices — including, but not limited to, phantom billing, upcoding, unbundling, double billing, and billing for medically unnecessary or substandard care (see the Fraud-Indicator Reference for the recognized typology). This applies regardless of whether the claim would otherwise satisfy standard coverage criteria, network status, or prior-authorization requirements described elsewhere in this policy — a claim exhibiting one or more of these patterns is non-payable on that basis alone.';
 
 export function coverageForCategory(categoryKey: string, isInNetwork: boolean, isEmergency = false): number {
   const category = COVERAGE_CATEGORIES.find((c) => c.key === categoryKey);

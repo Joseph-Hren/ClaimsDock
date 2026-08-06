@@ -26,6 +26,42 @@ export interface CoverageResult {
   deductibleRemainingAfter: number;
 }
 
+export interface DayCapSplitResult {
+  daysBeforeCap: number;
+  daysAfterCap: number;
+  coveredAmount: number;
+  patientResponsibility: number;
+}
+
+/**
+ * The annual inpatient benefit-day cap, worked the same way computeCoverage
+ * walks a deductible across line items — a running count instead of a
+ * running dollar balance. Days already used this plan year (before this
+ * admission) come first; whatever's left of the cap absorbs this stay's
+ * early days at the normal rate, the remaining days fall to the reduced
+ * post-cap rate (project-spec.txt Section 6, CAPS.inpatientPostCapCoverage).
+ * A calculation, not a judgment call — same as computeCoverage.
+ */
+export function computeInpatientDayCapSplit(params: {
+  totalDaysThisStay: number;
+  chargePerDay: number;
+  daysUsedBeforeThisStay: number;
+  annualDayCap: number;
+  normalCoverageRate: number;
+  postCapCoverageRate: number;
+}): DayCapSplitResult {
+  const daysRemainingUnderCap = Math.max(0, params.annualDayCap - params.daysUsedBeforeThisStay);
+  const daysBeforeCap = Math.min(params.totalDaysThisStay, daysRemainingUnderCap);
+  const daysAfterCap = params.totalDaysThisStay - daysBeforeCap;
+
+  const coveredAmount =
+    daysBeforeCap * params.chargePerDay * params.normalCoverageRate +
+    daysAfterCap * params.chargePerDay * params.postCapCoverageRate;
+  const totalCharge = params.totalDaysThisStay * params.chargePerDay;
+
+  return { daysBeforeCap, daysAfterCap, coveredAmount, patientResponsibility: totalCharge - coveredAmount };
+}
+
 export function computeCoverage(params: {
   lines: LineChargeInput[];
   deductibleRemaining: number;

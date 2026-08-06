@@ -1,0 +1,189 @@
+.card {
+  background: var(--bg-surface);
+  border-radius: var(--radius-lg);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.3),
+    0 4px 12px rgba(0, 0, 0, 0.14);
+  padding: 24px;
+  font-size: 0.875rem;
+  width: 480px;
+  max-width: 90vw;
+}
+
+/* The mismatch-warning card gets its own red-bordered treatment, matching
+   Figma's distinct "⚠ [Action] claim" variant — every other phase uses
+   .card unmodified. */
+.warningCard {
+  composes: card;
+  border: 1px solid var(--status-critical-text);
+}
+
+/* Wider than .card — Deny's own suggest-phase needs three buttons
+   (Submit/Auto-fill/Cancel) to sit on one row without wrapping, which
+   .card's 480px was too narrow for. */
+.denyCard {
+  composes: card;
+  width: 600px;
+}
+
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.claimId {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.close {
+  font-size: 0.75rem;
+  color: var(--ink-muted);
+}
+
+.title {
+  font-family: var(--font-heading);
+  font-size: 1.125rem;
+  margin-bottom: 12px;
+}
+
+.warningTitle {
+  composes: title;
+  color: var(--status-critical-text);
+}
+
+.hint {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.confirmedText {
+  font-family: var(--font-heading);
+  font-size: 1.0625rem;
+  margin-bottom: 16px;
+}
+
+.denyField {
+  margin-bottom: 14px;
+}
+
+.noteLabel {
+  display: block;
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+  margin-bottom: 6px;
+}
+
+.noteLabelError {
+  composes: noteLabel;
+  color: var(--status-critical-text);
+}
+
+.note {
+  width: 100%;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 0.8125rem;
+  resize: vertical;
+  background: var(--bg-field);
+  color: var(--ink-primary);
+}
+
+.noteError {
+  composes: note;
+  border-color: var(--status-critical-text);
+}
+
+.fieldError {
+  font-size: 0.6875rem;
+  color: var(--status-critical-text);
+  margin-top: 4px;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--border-subtle);
+  margin: 16px 0;
+}
+
+.suggestList {
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  padding-left: 1.25em;
+  margin-bottom: 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+/* Sized for its own longest label ("Submit denial anyway") so the button
+   doesn't visibly shrink to hug the loading dots while checking. */
+.denySubmitButton {
+  min-width: 21ch;
+}
+
+/* Shown inside the primary button in place of its label while the deny-check
+   API call is in flight — currentColor so it always matches that button's
+   own text color (primary-warning's rest-state color, light or dark), no
+   hardcoded hex per mode needed. */
+.loadingDots {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 1em;
+}
+.loadingDots span {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: loadingDotBounce 1.4s ease-in-out infinite both;
+}
+.loadingDots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+.loadingDots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes loadingDotBounce {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingDots span {
+    animation: none;
+  }
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

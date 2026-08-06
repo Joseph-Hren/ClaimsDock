@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { temporaryHeldSince } from './temporary-hold';
 import type { Claim } from '../claims/types';
 
-function fixtureClaim(overrides: Partial<Claim['_testMeta']>): Claim {
+function fixtureClaim(overrides: Partial<Claim>): Claim {
   return {
     claim_id: 'TEST-01',
     form_type: 'CMS-1500',
@@ -17,25 +17,26 @@ function fixtureClaim(overrides: Partial<Claim['_testMeta']>): Claim {
     total_charge: 100,
     sla_tier: 'standard',
     urgency_target: 'mid',
-    _testMeta: { scenario: 'clean', scenario_label: 'test', note: 'test', ...overrides },
-  };
+    _testMeta: { scenario: 'clean', scenario_label: 'test', note: 'test' },
+    ...overrides,
+  } as Claim;
 }
 
 describe('temporaryHeldSince', () => {
   const submitted = new Date('2026-07-01T00:00:00Z');
 
-  it('treats a missing-data claim with a flagged field as held since submission', () => {
-    const claim = fixtureClaim({ scenario: 'missing-data', deliberately_missing_field: 'box24_service_lines[0].box24j_rendering_provider_npi' });
+  it('holds a claim with an actual material field missing (billing provider NPI null)', () => {
+    const claim = fixtureClaim({ box33_billing_provider: { name: 'Test Provider', npi: null } });
     expect(temporaryHeldSince(claim, submitted)).toEqual(submitted);
   });
 
-  it('does not hold a missing-data claim with no flagged field', () => {
-    const claim = fixtureClaim({ scenario: 'missing-data' });
+  it('does not hold a claim with no missing fields', () => {
+    const claim = fixtureClaim({});
     expect(temporaryHeldSince(claim, submitted)).toBeNull();
   });
 
-  it('does not hold non-missing-data claims', () => {
-    const claim = fixtureClaim({ scenario: 'clean' });
+  it('does not hold on a legitimately-optional null field (prior auth not required)', () => {
+    const claim = fixtureClaim({ box23_prior_auth_number: null });
     expect(temporaryHeldSince(claim, submitted)).toBeNull();
   });
 });

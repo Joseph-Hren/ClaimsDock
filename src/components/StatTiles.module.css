@@ -1,0 +1,92 @@
+/* Animated-height frame, same technique as ClaimsCard's own view-switch
+   transition: this element gets the explicit, animated height; .grid inside
+   it stays naturally sized so its real content height can be measured. */
+.gridWrap {
+  overflow: hidden;
+  transition: height var(--dur-height) var(--ease-standard);
+}
+
+.grid {
+  display: flex;
+  gap: 16px;
+  padding: 20px 24px 0;
+}
+
+.tile {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: var(--radius-lg);
+}
+
+/* Light mode: tile background is the more saturated status-*-bg token (the
+   same one badges use); the toggle track is the paler tile-tint token — two
+   distinct, existing tokens, not a computed blend. Thumb stays the global
+   #ffffff default (tokens.css), so it isn't set here at all. */
+.good {
+  background: var(--status-good-bg);
+  --toggle-track-bg: var(--tile-tint-good);
+}
+.warning {
+  background: var(--status-warning-bg);
+  --toggle-track-bg: var(--tile-tint-warning);
+}
+.critical {
+  background: var(--status-critical-bg);
+  --toggle-track-bg: var(--tile-tint-critical);
+}
+.info {
+  background: var(--status-info-bg);
+  --toggle-track-bg: var(--tile-tint-info);
+}
+
+/* Dark mode keeps its existing, already-approved look: tile background is
+   the tile-tint token directly, the track is a black-blend of it, and the
+   thumb is bg-header rather than the global dark default (bg-page) — a
+   StatTile-specific choice, not the Claims Card's. */
+[data-theme='dark'] .good {
+  background: var(--tile-tint-good);
+  --toggle-track-bg: color-mix(in srgb, black 18%, var(--tile-tint-good));
+  --toggle-thumb-bg: var(--bg-header);
+}
+[data-theme='dark'] .warning {
+  background: var(--tile-tint-warning);
+  --toggle-track-bg: color-mix(in srgb, black 18%, var(--tile-tint-warning));
+  --toggle-thumb-bg: var(--bg-header);
+}
+[data-theme='dark'] .critical {
+  background: var(--tile-tint-critical);
+  --toggle-track-bg: color-mix(in srgb, black 18%, var(--tile-tint-critical));
+  --toggle-thumb-bg: var(--bg-header);
+}
+[data-theme='dark'] .info {
+  background: var(--tile-tint-info);
+  --toggle-track-bg: color-mix(in srgb, black 18%, var(--tile-tint-info));
+  --toggle-thumb-bg: var(--bg-header);
+}
+
+.numRow {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.count {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.label {
+  font-size: 0.8125rem;
+  color: var(--ink-muted);
+}
+
+.emptyLabel {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-muted);
+}

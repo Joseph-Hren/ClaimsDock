@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# reference material, not for public repo
+previous-projects/
+
+# local session/tool settings, not app config
+.claude/

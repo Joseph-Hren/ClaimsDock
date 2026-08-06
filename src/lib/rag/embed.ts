@@ -3,7 +3,15 @@
 // one-time latency (a few seconds), not a per-query cost. Server-side only;
 // never import this from client code.
 
-import { pipeline, type FeatureExtractionPipeline } from '@huggingface/transformers';
+import { pipeline, env, type FeatureExtractionPipeline } from '@huggingface/transformers';
+
+// Default cache directory lives inside node_modules, which is fine
+// locally but read-only on Vercel at runtime — found live 2026-08-06 as
+// "ENOENT: no such file or directory, mkdir '/var/task/node_modules/
+// @huggingface/transformers/.cache'". /tmp is the only writable path in a
+// Vercel serverless function, and is exactly what this needs: the model
+// just has to survive for one warm instance's lifetime, not permanently.
+env.cacheDir = '/tmp/huggingface-cache';
 
 const MODEL_ID = 'Xenova/all-MiniLM-L6-v2';
 

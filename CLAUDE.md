@@ -108,7 +108,7 @@ Domain-level open items live in project-spec.txt's own Open Items list. These ar
 
 - Batching strategy once the claim set grows past 20 — resolved in Phase 13 Pass G (chunked batching, dynamically-sized chunks, see build-log/build-log.html).
 - Embedding provider (Phase 4) and visual/UI design (Phases 8A/8B) were both open items here at one point — both resolved and done; see build-log/build-log.html for how.
-- The workflow diagram (Phase 10) rewrite — scheduled, not yet started; see Phase 10's own entry above.
+- The workflow diagram (Phase 10) rewrite — done; see Phase 10's own entry above.
 
 ## Style rules
 

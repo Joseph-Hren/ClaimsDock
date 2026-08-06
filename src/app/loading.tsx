@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { AnchorLogo } from '../components/ChromeIcons';
-import { startFactCycler } from './fact-cycler';
+import { startFactCyclePolling } from './fact-cycler';
 import styles from './loading.module.css';
 
 // Next.js's automatic Suspense boundary for the async Home page below
@@ -38,19 +38,17 @@ export default function Loading() {
   const [visible, setVisible] = useState(true);
 
   useEffect(() => {
-    // Randomized order decided client-side only — this component is
-    // server-rendered first as the Suspense fallback, so picking a random
-    // order during the initial render would mismatch on hydration.
-    return startFactCycler(FACTS.length, 0, {
-      onFadeOut: () => setVisible(false),
-      onNext: (i) => setFactIndex(i),
-      onFadeIn: () => setVisible(true),
+    // Derived from elapsed wall-clock time (persisted in sessionStorage),
+    // not a chain of setTimeout calls — see fact-cycler.ts for why.
+    return startFactCyclePolling(FACTS.length, ({ factIndex, visible }) => {
+      setFactIndex(factIndex);
+      setVisible(visible);
     });
   }, []);
 
   return (
     <div className={styles.wrap}>
-      <img src="/claimsdock-logo.svg" alt="ClaimsDock" className={styles.logo} />
+      <div role="img" aria-label="ClaimsDock" className={styles.logo} />
 
       <p className={styles.tagline}>
         ClaimsDock is a medical claims adjudication tool powered by the{' '}

@@ -14,7 +14,22 @@
 
 .logo {
   height: 60px;
-  width: auto;
+  /* Intrinsic aspect ratio of claimsdock-logo.svg (699:97). */
+  width: calc(60px * 699 / 97);
+  /* The source SVG is a flat fill="white" mark meant for the masthead's
+     dark header background — invisible against this screen's light page
+     background. Recolored via a CSS mask so it always matches --ink-primary,
+     the same token the rest of this screen's text already uses, instead of
+     needing a separate light/dark asset swap. */
+  background-color: var(--ink-primary);
+  -webkit-mask-image: url('/claimsdock-logo.svg');
+  mask-image: url('/claimsdock-logo.svg');
+  -webkit-mask-size: contain;
+  mask-size: contain;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-position: center;
 }
 
 .tagline {

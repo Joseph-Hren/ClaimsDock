@@ -48,6 +48,7 @@ export default function Pagination({
             className={styles.pageSizeSelect}
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
+            aria-label="Items per page"
           >
             {PAGE_SIZE_OPTIONS.map((size) => (
               <option key={size} value={size}>

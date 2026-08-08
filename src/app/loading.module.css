@@ -119,23 +119,35 @@
   line-height: 1.5;
 }
 
-.fact {
+.factStack {
+  position: relative;
+  width: 100%;
   max-width: 560px;
   /* Fixed height reserved for the longest fact (5 lines at this font-size/
-     max-width, with margin) so switching facts never shifts anything above
-     it — a shorter fact just leaves empty space below itself within this
-     box, rather than the block resizing. */
+     max-width, with margin) so cycling never shifts anything above it — a
+     shorter fact just leaves empty space below itself within this box,
+     rather than the block resizing. */
   height: 7.5em;
+}
+
+/* Every fact renders into the DOM at once, absolutely stacked in the same
+   box — cycling is one shared @keyframes animation (defined inline in
+   loading.tsx, since its exact percentages depend on how many facts there
+   are) with a different animation-delay per item, the standard pure-CSS-
+   carousel technique. No JavaScript involved at any point. */
+.factItem {
+  position: absolute;
+  inset: 0;
   overflow: hidden;
+  margin: 0;
   font-family: var(--font-heading);
   font-size: 1.375rem;
   line-height: 1.5;
   color: var(--ink-primary);
   opacity: 0;
-  transition: opacity 0.65s ease;
-}
-.factVisible {
-  opacity: 1;
+  animation-name: factSlot;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -143,7 +155,11 @@
     animation: none;
     background-position: 50% 0;
   }
-  .fact {
-    transition: none;
+  .factItem {
+    animation: none;
+    opacity: 0;
+  }
+  .factItem:first-child {
+    opacity: 1;
   }
 }

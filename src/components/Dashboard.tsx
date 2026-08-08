@@ -127,6 +127,18 @@ export default function Dashboard({ rows }: { rows: DashboardClaimRow[] }) {
   }
 
   function stagePending(claimId: string, result: { status: ClaimStatus; severity: SeverityBand; auditEntry: AuditLogEntry }) {
+    // A bulk-queue step commits immediately, no grace window — the adjuster
+    // already made one explicit, deliberate choice by starting the queue, so
+    // a confirm-screen-plus-wait per claim, multiplied across a whole
+    // selection, is real reported friction rather than a misclick safety
+    // net (2026-08-07). Same commit shape runInstantBulkAction already uses.
+    // Single-claim actions (queueRef null) keep the full grace window below.
+    if (queueRef.current !== null) {
+      appendAuditEntry(result.auditEntry);
+      setRefreshKey((k) => k + 1);
+      finishOverlayAction(claimId);
+      return;
+    }
     setPending({ claimId, entry: result.auditEntry, displayStatus: result.status, displaySeverity: result.severity });
     pendingTimer.current = setTimeout(commitPending, GRACE_WINDOW_MS);
   }
@@ -353,7 +365,11 @@ export default function Dashboard({ rows }: { rows: DashboardClaimRow[] }) {
       />
 
       <div className={styles.body}>
-        <div className={styles.mainColumn}>
+        {/* Primary content region — Anchor's own panel is a sibling <aside>
+            (see AnchorPanel.tsx), so together these give the page its two
+            real landmarks instead of unlabeled divs (2026-08-07, accessibility
+            audit: no <main>, no page-level heading structure). */}
+        <main className={styles.mainColumn}>
           <StatTiles rows={displayRows} />
 
           {/* Rendered here, not inside .tableRegion below — the shade needs
@@ -416,7 +432,7 @@ export default function Dashboard({ rows }: { rows: DashboardClaimRow[] }) {
               </ModalLayer>
             )}
           </div>
-        </div>
+        </main>
 
         <AnchorPanel
           providerNames={providerNames}

@@ -1,118 +1,46 @@
-// @vitest-environment jsdom
-//
-// Tests the real hydration path (server-rendered markup, then hydrateRoot),
-// not just a fresh client mount — a Suspense fallback like this one is
-// always server-rendered first, so a hydration-specific failure wouldn't
-// show up in a plain createRoot test. Written 2026-08-06 after a live report
-// that the cycling fact text was permanently stuck on the first entry —
-// first suspected as dev-server/HMR staleness, but it recurred in a fresh
-// production deploy under a genuine ~90s cold Pipeline run, which is a
-// realistic scenario for the fallback's DOM node to get torn down and
-// recreated mid-wait. The "survives being remounted" test below is the one
-// that actually covers that failure mode.
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { StrictMode, act } from 'react';
+// Loading is a plain Server Component now (rewritten 2026-08-07) — no
+// client state, no hooks, so there's nothing left to hydrate or remount in
+// the way the old useEffect-driven version had. These tests check the
+// actual mechanism that replaced it: every fact renders into the markup up
+// front, each with a distinct animation-delay, and a shared @keyframes rule
+// sized to however many facts actually exist — the whole point being that
+// none of this depends on client JS ever running at all.
+import { describe, it, expect } from 'vitest';
 import { renderToString } from 'react-dom/server';
-import { hydrateRoot, type Root } from 'react-dom/client';
 import Loading from './loading';
 
-describe('Loading — hydration', () => {
-  let container: HTMLDivElement;
-  let root: Root | undefined;
+describe('Loading', () => {
+  const html = renderToString(<Loading />);
 
-  beforeEach(() => {
-    vi.useFakeTimers();
-    sessionStorage.clear();
-    container = document.createElement('div');
-    document.body.appendChild(container);
+  it('renders every fact into the markup at once, not just one at a time', () => {
+    const factItemCount = (html.match(/class="[^"]*factItem[^"]*"/g) ?? []).length;
+    expect(factItemCount).toBeGreaterThan(1);
   });
 
-  afterEach(() => {
-    act(() => {
-      root?.unmount();
-    });
-    container.remove();
-    vi.useRealTimers();
+  it('gives each fact a distinct, increasing animation-delay', () => {
+    const delays = [...html.matchAll(/animation-delay:([\d.]+)s/g)].map((m) => Number(m[1]));
+    expect(delays.length).toBeGreaterThan(1);
+    const sorted = [...delays].sort((a, b) => a - b);
+    expect(delays).toEqual(sorted);
+    expect(new Set(delays).size).toBe(delays.length);
+    // Evenly spaced — each item's delay is one more full slot than the last.
+    const step = delays[1] - delays[0];
+    for (let i = 1; i < delays.length; i++) {
+      expect(delays[i] - delays[i - 1]).toBeCloseTo(step, 5);
+    }
   });
 
-  it('cycles to a new fact after hydrating from server-rendered markup', async () => {
-    const html = renderToString(<Loading />);
-    container.innerHTML = html;
-
-    await act(async () => {
-      root = hydrateRoot(container, <Loading />);
-    });
-
-    const initialText = container.querySelector('[aria-live="polite"]')?.textContent;
-    expect(initialText).toBeTruthy();
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(9000);
-    });
-
-    const laterText = container.querySelector('[aria-live="polite"]')?.textContent;
-    expect(laterText).not.toBe(initialText);
+  it('defines one shared keyframe, scaled to the actual fact count', () => {
+    expect(html).toContain('@keyframes factSlot');
+    const stops = [...html.matchAll(/([\d.]+)% \{ opacity: (0|1); \}/g)].map((m) => Number(m[1]));
+    // 0%, fade-in-end, fade-out-start, slot-end, 100% — strictly increasing.
+    expect(stops.length).toBe(5);
+    for (let i = 1; i < stops.length; i++) {
+      expect(stops[i]).toBeGreaterThan(stops[i - 1]);
+    }
   });
 
-  it('still cycles when hydrated under StrictMode (double-invoked effects)', async () => {
-    const html = renderToString(
-      <StrictMode>
-        <Loading />
-      </StrictMode>,
-    );
-    container.innerHTML = html;
-
-    await act(async () => {
-      root = hydrateRoot(
-        container,
-        <StrictMode>
-          <Loading />
-        </StrictMode>,
-      );
-    });
-
-    const initialText = container.querySelector('[aria-live="polite"]')?.textContent;
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(9000);
-    });
-
-    const laterText = container.querySelector('[aria-live="polite"]')?.textContent;
-    expect(laterText).not.toBe(initialText);
-  });
-
-  it('picks up where it left off if the fallback is torn down and recreated mid-wait', async () => {
-    // Simulates the real production failure mode: a long-held Suspense
-    // fallback whose DOM node gets recreated partway through a ~90s wait.
-    // A remount that resets to the first fact every time is exactly the bug
-    // that was reported live; this proves the sessionStorage-anchored
-    // elapsed-time approach doesn't regress to that.
-    const html = renderToString(<Loading />);
-    container.innerHTML = html;
-    await act(async () => {
-      root = hydrateRoot(container, <Loading />);
-    });
-
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(20_000);
-    });
-    const textBeforeRemount = container.querySelector('[aria-live="polite"]')?.textContent;
-
-    // Tear down and recreate, as if the fallback's DOM node were replaced.
-    act(() => root!.unmount());
-    container.innerHTML = html;
-    await act(async () => {
-      root = hydrateRoot(container, <Loading />);
-    });
-
-    const textImmediatelyAfterRemount = container.querySelector('[aria-live="polite"]')?.textContent;
-    expect(textImmediatelyAfterRemount).toBe(textBeforeRemount);
-
-    // And it keeps advancing from there rather than getting stuck again.
-    await act(async () => {
-      await vi.advanceTimersByTimeAsync(9000);
-    });
-    const textAfterMoreTime = container.querySelector('[aria-live="polite"]')?.textContent;
-    expect(textAfterMoreTime).not.toBe(textImmediatelyAfterRemount);
+  it('marks the fact carousel decorative, since it is not load-bearing information', () => {
+    expect(html).toMatch(/factStack[^>]*aria-hidden="true"|aria-hidden="true"[^>]*factStack/);
   });
 });

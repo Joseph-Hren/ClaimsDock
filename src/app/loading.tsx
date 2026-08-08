@@ -1,8 +1,5 @@
-'use client';
-
-import { useEffect, useState } from 'react';
 import { AnchorLogo } from '../components/ChromeIcons';
-import { startFactCyclePolling } from './fact-cycler';
+import { shuffledOrder } from './fact-cycler';
 import styles from './loading.module.css';
 
 // Next.js's automatic Suspense boundary for the async Home page below
@@ -10,6 +7,22 @@ import styles from './loading.module.css';
 // uncached ISO week — real live model calls, realistically 20-60+ seconds;
 // every load after that hits Phase 7's per-ISO-week cache and never reaches
 // this at all.
+//
+// Deliberately a plain Server Component with no client JS at all (rewritten
+// 2026-08-07) — a prior version cycled facts via a useEffect, which tested
+// correctly everywhere it could actually be tested (fresh mount, StrictMode,
+// a real hydrateRoot pass, even a simulated remount), but a live report of
+// it staying frozen on the first fact in production pointed at something
+// none of those tests could reach: this fallback is delivered as the first
+// flushed chunk of a single HTTP response that then stays open for up to
+// ~90s while the real page streams in behind it, and there was no way to
+// confirm from here whether client JS reliably hydrates and starts running
+// during that unusually long-pending stream. Rather than keep patching a
+// mechanism riding on an unverifiable assumption, this removes the
+// assumption: every fact renders into the HTML up front, and a shared CSS
+// keyframe animation (with a per-item delay, computed below) handles the
+// cycling entirely on the browser's own compositor — the same reason the
+// shimmer bars already kept animating even when the fact text didn't.
 
 const FACTS: string[] = [
   "ClaimsDock's interface has three distinct visual styles: Ledger, Clinical, and Field — switchable in the Settings panel.",
@@ -33,18 +46,34 @@ const FACTS: string[] = [
   "ClaimsDock's document search runs on locally-hosted embeddings — no claim data is sent to a third party just to answer a policy question.",
 ];
 
-export default function Loading() {
-  const [factIndex, setFactIndex] = useState(0);
-  const [visible, setVisible] = useState(true);
+const FADE_S = 0.5;
+const HOLD_S = 7;
+const PER_SLOT_S = FADE_S + HOLD_S + FADE_S;
+const TOTAL_S = FACTS.length * PER_SLOT_S;
 
-  useEffect(() => {
-    // Derived from elapsed wall-clock time (persisted in sessionStorage),
-    // not a chain of setTimeout calls — see fact-cycler.ts for why.
-    return startFactCyclePolling(FACTS.length, ({ factIndex, visible }) => {
-      setFactIndex(factIndex);
-      setVisible(visible);
-    });
-  }, []);
+// One shared keyframe, expressed as a fraction of the *entire* loop, reused
+// by every fact via a per-item positive animation-delay (i * PER_SLOT_S) —
+// the standard pure-CSS-carousel technique. Computed from FACTS.length
+// rather than hardcoded, so this stays correct if a fact is ever added or
+// removed without anyone needing to hand-recompute percentages.
+const fadeInEndPct = (FADE_S / TOTAL_S) * 100;
+const fadeOutStartPct = ((PER_SLOT_S - FADE_S) / TOTAL_S) * 100;
+const slotEndPct = (PER_SLOT_S / TOTAL_S) * 100;
+
+const KEYFRAMES_CSS = `
+@keyframes factSlot {
+  0% { opacity: 0; }
+  ${fadeInEndPct}% { opacity: 1; }
+  ${fadeOutStartPct}% { opacity: 1; }
+  ${slotEndPct}% { opacity: 0; }
+  100% { opacity: 0; }
+}
+`;
+
+export default function Loading() {
+  // Randomized once per request, server-side — no client JS needed to pick
+  // an order, so there's nothing for a slow-hydration scenario to break.
+  const order = shuffledOrder(FACTS.length);
 
   return (
     <div className={styles.wrap}>
@@ -69,9 +98,24 @@ export default function Loading() {
         this may take a few minutes. Later loads this week will be instant.
       </p>
 
-      <p className={`${styles.fact} ${visible ? styles.factVisible : ''}`} aria-live="polite">
-        {FACTS[factIndex]}
-      </p>
+      <style dangerouslySetInnerHTML={{ __html: KEYFRAMES_CSS }} />
+      {/* Decorative trivia, not load-bearing information — the status line
+          above already says what's actually happening. All facts are
+          simultaneously present in the DOM (only CSS opacity distinguishes
+          them), so a screen reader reading this container by its own
+          content rather than skipping it would hear all of them
+          back-to-back with no useful signal — aria-hidden avoids that. */}
+      <div className={styles.factStack} aria-hidden="true">
+        {order.map((factIndex, position) => (
+          <p
+            key={factIndex}
+            className={styles.factItem}
+            style={{ animationDelay: `${position * PER_SLOT_S}s`, animationDuration: `${TOTAL_S}s` }}
+          >
+            {FACTS[factIndex]}
+          </p>
+        ))}
+      </div>
     </div>
   );
 }

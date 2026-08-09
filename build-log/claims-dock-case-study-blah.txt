@@ -1,0 +1,290 @@
+Claimsdock case study copy draft3 · TXT
+
+
+
+CLAIMSDOCK — CASE STUDY BODY COPY (DRAFT 3)
+
+Content and substance only — no visual formatting decisions made here. Captions still to be written separately.
+
+ 
+
+---
+
+ 
+
+CLAIMSDOCK
+
+A production AI copilot for medical-claims adjudication, built and shipped solo — Claude and Kimi running the same system side by side, so I could measure the tradeoff instead of assuming it.
+
+ 
+
+Role: Product direction, spec authorship, system architecture, research, testing, deployment.
+
+Stack: Next.js, TypeScript, Anthropic's Claude, Moonshot's Kimi, self-hosted embeddings, deployed on Vercel.
+
+ 
+
+ClaimsDock reads incoming medical claims, gathers evidence, rates its own confidence, and recommends an action — approve, deny, escalate, or hold for missing information. Every recommendation cites a source document. Nothing becomes a decision without a person clicking to make it one.
+
+ 
+
+- Refined a legally-consequential denial-reasoning guardrail across eleven documented rounds of live failure, caught it silently regressing on a previously-passing case, and built a permanent regression suite so it couldn't happen again unnoticed.
+
+- Ran Claude and Kimi head-to-head on identical claims, designed a metric for what actually mattered, caught a mislabeled claim in my own test set, and made a documented, cost-driven routing decision on the results.
+
+- Found and closed an information leak: an internal claim ID that encoded ground-truth answers was being sent to the model unmodified. 
+
+- UI Design — five directions explored, three shipped, each in light and dark, checked to WCAG AAA contrast computationally rather than by eye.
+
+- Deployed live. Three bugs surfaced only in production, none reproducible in months of local development.
+
+ 
+
+A condensed, phase-by-phase build log covers the full process in more depth than fits here.
+
+ 
+
+---
+
+ 
+
+THE PROBLEM
+
+ 
+
+Most insurance claims are simple. A small number are genuinely ambiguous, missing information, or fraudulent, and those are the ones that eat an adjuster's day — because separating the merely-flagged from the actually-wrong takes judgment, every time, at volume. I wanted to build something that does that sorting honestly: surface what's genuinely uncertain, ground every claim in evidence and policy language, and leave the decision with a person who can be held accountable for it. A system that does the reading so a person can do the deciding faster, with better information than they'd have otherwise.
+
+ 
+
+I chose medical claims because it's a domain with real regulatory stakes — ERISA governs exactly how a denial has to be justified — fraud patterns worth naming correctly, and enough structural complexity, deductibles, network status, benefit caps, linked claims, that guessing your way through it was never going to work.
+
+ 
+
+This started as a question about what a genuinely agentic system looks like when a router, a grounding layer, a confidence signal, and a human decision-maker all have to hold together as one working system — and medical claims became the domain because nothing about it forgives a shortcut.
+
+ 
+
+---
+
+ 
+
+RESEARCH: HOW PEOPLE ACTUALLY TRUST AI
+
+ 
+
+I built ClaimsDock's interface around a persona, Denise Marsh — a senior claims adjuster nine years into the field, the kind who gets routed the disputed cases rather than the routine ones. Her caution toward automated recommendations isn't invented color. It's grounded in peer-reviewed research, and that research shaped decisions in the product.
+
+ 
+
+A key tension I designed against is well-documented: people trust algorithms readily on analytical tasks, but that trust drops sharply the moment they see the algorithm make a mistake, more sharply than the same mistake made by a person, and they lean back on their own judgment afterward. Researchers call this algorithm aversion, and its boundaries are studied too: letting people edit an algorithm's output, rather than just accept or reject it, measurably softens the effect. That finding is a direct line to the Human Gate's "Approve with edit" path, which exists so an adjuster never has to reject a correct finding outright just because one number in it is wrong.
+
+ 
+
+One finding changed how I thought about Anchor's confidence tiers specifically: reliance tracks an algorithm's stated accuracy right up until it's actually wrong more often than it said it would be, at which point trust doesn't just decline, it collapses. That's a narrower target than "show a confidence score." Anchor's tiers have to be accurate, not just present — an honest "Confident" that turns out wrong does more damage to trust than showing no tier at all. I built the tiers around how directly the evidence supports a conclusion instead of a number meant to look precise.
+
+ 
+
+The same research shaped the Human Gate a second way: people lean on an algorithm's correct suggestions more than its incorrect ones, meaning they're curating a recommendation, not just accepting it. Anchor's citation-plus-disclaimer pattern is my own version of the well-timed nudge that research points toward — a design decision built on evidence about how people calibrate trust.
+
+ 
+
+The most uncomfortable finding, and the one I take most seriously, challenges an assumption I might otherwise have made by default: that putting a person in the approval path guarantees oversight. Research testing that assumption directly finds it doesn't reliably hold — people accepted AI-generated advice even when told the AI's training data was unknown or presumably biased, and even when explicitly warned to be skeptical of it. A human checkpoint can become a rubber stamp if the human isn't actually made to engage with the decision. That's the entire reason denying a claim in ClaimsDock isn't a single click. It requires a four-field justification, checked for coherence against the claim's evidence, catching cases where a stated reason cited the wrong fraud category even though the underlying denial was correct. The goal was never just a human in the loop. It's a human who has to do something in that loop.
+
+ 
+
+Sourcing note: the algorithm-aversion and trust-calibration findings come from peer-reviewed academic research (Behaviour and Information Technology, 2025) and an academic paper on human-in-the-loop overtrust. An industry source, covering a 2025 claims-management conference, weighted below the academic material.
+
+ 
+
+---
+
+ 
+
+FOUR LAYERS, ONE SET OF RULES
+
+ 
+
+ClaimsDock is four systems sharing a small number of hard rules, not one AI system with a few features bolted on. A claim moves through all four differently, and that's the point:
+
+ 
+
+- An Evaluation Pipeline that reads every incoming claim automatically and produces evidence, a confidence tier, and a recommendation — no human involved yet.
+
+- A Router and an embedded assistant, Anchor, that an adjuster can ask a question of at any time, in plain language, grounded in the same evidence and policy documents the Pipeline used.
+
+- A Human Gate that sits between any AI output and any actual action, backed by its own guardrails.
+
+- A retrieval layer, shared by the Pipeline and Anchor, that grounds its replies in reference documents instead of the model’s memory.
+
+ 
+
+There's exactly one user here, an adjuster, and the complexity lives entirely in how many different jobs the system does around that one person.
+
+ 
+
+The rule that ties all four together, and the one I held to most strictly through the whole build: calculations stay calculations. Severity, SLA math, coverage math, and the category-to-recommended-action mapping are all deterministic code, never a model's judgment call. I made this decision in the first planning pass, before any pipeline code existed, because the alternative — asking a model to compute a dollar amount or a deadline — trades a testable function for a probabilistic one with no upside. A model earns its keep reading messy evidence and judging genuinely ambiguous things. It has no business re-deriving arithmetic a spreadsheet does correctly every time.
+
+ 
+
+---
+
+ 
+
+TWO CALLS: SPLIT FOR TRUST
+
+ 
+
+Every claim goes through exactly two model calls, a design based on my research for AI trustworthiness and reliability. 
+
+ 
+
+The first call reads the claim, plus its linked claim if it's part of a professional/facility pair, plus the billing provider's recent volume history if a spike pattern is relevant, and produces evidence and a proposed category: clean, ambiguous, missing data, complex coverage math, or fraudulent. It does not rate its own confidence, and it does not recommend an action.
+
+ 
+
+The second call is shown only that evidence and category, never the first call's reasoning, never the original claim again, and independently judges a confidence tier before drafting the recommendation. This is LLM-as-judge, actually implemented rather than named in passing. I split these into two isolated calls so a model never grades its work in the same breath it did the work. A single call that finds a pattern and immediately rates how sure it is of that pattern is checking its own homework.
+
+ 
+
+That confidence tier matters more than it looks. Anchor's four tiers — High Confidence, Confident, Suspected, Uncertain — describe how directly the evidence supports a conclusion rather than a probability score. AI is not good at picking a range between 1-100, and much better at following a rubric to determine a category. I made this distinction through my research on how people respond to disclosed algorithm accuracy: a number invites false precision. A tier tied to the strength of the evidence is something a person can reason about the way they'd reason about a colleague's confidence rather than a statistic they either trust blindly or ignore.
+
+ 
+
+The claim set grew from 20 authored test claims to 132 over the build, across clean, ambiguous, missing-data, complex-math, and fraud scenarios, in a distribution I decided on deliberately — I cut the ambiguous category from 12 down to 6 partway through, since too many flagged claims dead-ending at "escalate, no other outcome possible" made the demo unsatisfying to click through. At that scale, a single Pipeline call per batch stopped being viable, so I chunked the set into batches sized off the total claim count, with a round-robin cursor keeping every batch's category mix, and its token cost, roughly even. Getting that even took three live-tested attempts — a naive contiguous slice clustered similar claims together and made per-batch variance worse; a binary clean/non-clean split fixed one call's variance while making the other one worse. At 132 claims, that's six batches, each with a retry, after one flaky network timeout on a single batch discarded five other batches' already-succeeded, already-paid-for results.
+
+ 
+
+The Pipeline runs on Kimi in production — a cost decision made after head-to-head testing against Claude, not by default. 
+
+ 
+
+---
+
+ 
+
+RETRIEVAL: WHAT GROUNDS EVERY ANSWER
+
+ 
+
+Every recommendation ClaimsDock makes traces back to one of three reference documents: 
+• A Coverage and Adjudication Policy: deductible logic, network rates, prior-authorization rules, benefit caps — synthetic but structurally realistic
+• A Fraud-Indicator Reference: standard industry terminology for billing fraud, sourced from OIG enforcement history, DOJ False Claims Act settlements, and CMS's own coding-integrity program, plus one documented FinCEN volume-spike pattern)
+• A Regulatory Deadline Reference covering ERISA's tiered decision deadlines
+Anchor and the Pipeline both cite these by name so nothing gets invented or hallucinated.
+
+ 
+
+I built retrieval on local, self-hosted embeddings — Hugging Face's transformers.js port, running the Xenova/all-MiniLM-L6-v2 model — rather than a hosted embedding API, to avoid a dependency a corpus this small doesn't need. Each document gets chunked on its own natural section headings, embedded once, and held in a plain in-memory array. No vector database — at a few dozen chunks total, comparing a query's embedding against every chunk directly is instant.
+
+ 
+
+Retrieval quality turned out to be an ongoing tradeoff. A smoke test found that the exact chunk containing ERISA's tiered-deadline table ranked fifth of six results for the one question it was built to answer. The chunk was built almost entirely from raw markdown table syntax, which a sentence-embedding model, trained overwhelmingly on prose, embeds poorly. Flattening the table into plain-language sentences barely moved the ranking, which told me the problem was structural: mean-pooled embeddings dilute a long chunk's vector toward its average content, letting a short, keyword-dense chunk out-rank a longer one that actually holds the right answer. I fixed it with hybrid scoring, blending embedding similarity at 70% with a keyword-overlap signal at 30%, which recovered the ERISA chunk to second place. I left the ranking imperfect past that point on purpose — both Anchor and the Pipeline retrieve several top-ranked chunks for synthesis, not just the single top result, so a small ranking margin doesn't produce a wrong answer even when the ranking itself isn't perfect.
+
+ 
+
+---
+
+ 
+
+ANCHOR AND THE ROUTER
+
+ 
+
+Anchor is the part of ClaimsDock an adjuster actually talks to — a plain-language question box that can look up a claim, re-analyze it, draft a recommendation, or answer a general policy question, independent of whatever the automatic Pipeline already decided. Underneath it is an agentic tool-use loop: a Router classifies each question into one of four tools, extracts the right parameters, executes the tool, and can chain a second tool call if the first result implies a follow-up is needed, inside a bounded round budget rather than a fixed one-shot call.
+ 
+I designed against three distinct, separately testable failure modes, because they're different problems with different fixes: 
+• the Router choosing the wrong tool entirely
+• choosing the right tool but extracting the wrong parameters (the right kind of analysis, pointed at the wrong claim)
+• misjudging whether a question is about one particular claim or nothing in particular
+A wrong tool choice is a routing-prompt problem. A right tool with wrong parameters is usually a context problem — the Router defaulting to whichever claim happened to be on screen instead of the one actually named in the question. I tested both separately with an adversarial question set, and caught a bug on the first live run: a question needing two tools in sequence, claim facts then a policy fact, had its second tool call silently dropped, because the original round-trip only handled a single dispatch round. It was dfixed as a bounded loop instead of assuming every question resolves in one call.
+ 
+Anchor runs on either provider, Claude or Kimi, switchable from a settings toggle, independent of whichever one the Pipeline uses — a decision I made deliberately, since Anchor's answer quality was worth testing on its own terms. Anchor's memory survives that switch, too: ask a follow-up after flipping from Kimi to Claude mid-conversation, and Anchor still knows what "that claim" refers to, because the one turn of prior-question memory it carries is stored independent of which model answers it. Small detail, but it's the kind that either works invisibly or breaks a user's trust the first time it doesn't.
+ 
+One more find: the internal claim ID I was sending to the model wasn't neutral. It spelled out the claim's ground truth right in the text — a fraud claim's ID literally named its fraud type. I fixed it by giving each claim one opaque display number: what the adjuster sees, and the only ID a model ever gets. The ID stays private, never sent anywhere a model can read it. 
+
+ 
+
+---
+
+ 
+
+CLAUDE VS. KIMI, AND THE SILENT MISS
+
+ 
+
+I didn't pick a model provider by reputation. I built a comparison harness and ran both providers, at each one's own best configuration, against the identical fixed claim set across repeated matched batches, then designed the metric I actually cared about before trusting either provider's raw accuracy number.
+ 
+Raw accuracy treats every wrong category as equally bad, but that isn’t necessarily true in all cases. A model that gets a claim's category wrong but stays cautious about it still reaches a person for review — the deterministic layer routes anything below a confident tier to a human regardless of category. The dangerous failure is different: a wrong "clean" call paired with a confident tier, which auto-resolves with nobody ever reviewing it. I called this a silent miss and tracked it specifically, since it's the one failure mode this system's safety architecture can't catch after the fact.
+ 
+The results split into two separate findings, and both are real. On accuracy, confirmed across repeated matched batches: Claude averaged 18.4 of 20 (92%), consistently, across every prompt iteration tested — the stronger, more established number. On completion reliability, the opposite held. Both providers get a safety net on the Confidence step: if a batch comes back missing an entry for a claim, it retries up to three times, re-listing every expected claim ID. Claude, at its best configuration, burned through all three retries and still came back incomplete on two of ten runs. The pattern held up later too: Kimi went on to finish twenty more runs clean, while Claude kept failing at roughly the same one-in-five rate, tied to that same step every time.
+ 
+Silent misses told a third part of the story, and this is the one I had to fix my own mistake to trust: Kimi held at 13 silent misses across its ten runs, against 4 for Claude across its eight successful ones. But one of Kimi's misses, the one dragging its rate down hardest, traced back to a mislabeled ground-truth claim in my test set, not a model error. I fixed the mislabeling, added one more targeted prompt example, and Kimi's most recent batch reached 18.6 of 20 with a 5% silent-miss rate, nearly matching Claude's own. I'm treating that result as promising and not yet fully proven — one corrected batch, not the repeated-batch confirmation Claude's number has behind it — and saying so plainly rather than rounding it up early.
+ 
+The difference that survived every round untouched is cost: Kimi runs roughly five times cheaper per token, which is the entire reason this comparison exists. I made three separate provider decisions, each for its own reason. The Pipeline and the Deny guardrail both run on Kimi in production — cost-driven calls appropriate to a public prototype with no actual patients or dollars on the line. If this were an actual enterprise tool, I'd have been far more careful about that choice; the stakes here are low enough that cost was allowed to decide it. Anchor stayed switchable between both, since its answer quality deserved its own test rather than an assumption it would track the Pipeline's pick.
+ 
+Personally, I found Kimi's answers inside Anchor were, if anything, more thorough than Claude's for the same questions, and it reached for generated tables and bulleted structure far more often. Claude consistently fell back to prose with the occasional list for the same kind of request. I didn't build a test around this. It's just what I noticed, hands-on, and it's worth knowing if you're picking a model for a task where structured output actually helps the person reading it.
+ 
+
+---
+
+ 
+
+THE HUMAN GATE
+
+ 
+
+Nothing in ClaimsDock becomes an approval, a denial, or an escalation without a person clicking to make it happen, and I built two guardrails for the moment that click happens.
+
+ 
+
+The first is deterministic and costs nothing: it compares whatever action an adjuster chooses against the Pipeline's recommendation and surfaces a soft confirmation, citing the evidence already on file, if the two disagree. It never blocks anyone from proceeding with their own choice — a system that could override a person's decision would contradict the entire premise the platform rests on. I scoped this check to every action except Approve-with-edit, deliberately: an override on approval doesn't carry a denial's regulatory stakes, and the free mismatch check already covers the accountability moment for a corrected recommendation.
+
+ 
+
+The second guardrail is where most of the engineering difficulty in this build lived. Denying a claim requires four structured justification fields — the specific reason, the plan or policy provision it violates, any internal standard applied, and what could reverse the decision — and a model-backed check grades that justification's coherence against the claim's evidence before it's accepted, drafting a better version when it falls short. I refined this single guardrail across eleven documented rounds of live failure: a wrong document cited, a fabricated policy provision, a genuine gap in my reference corpus that no amount of prompt tuning could paper over, a retrieval-recall problem where the same correct citation ranked differently depending on how clinically-worded a claim's evidence happened to read, and, twice, two of my guardrail rules contradicting each other on different claims.
+
+ 
+
+The fix, once I stepped back far enough to see it, wasn't another prompt patch. One of the four fields was never a genuine judgment call in the first place: a denial for fraud only ever follows one specific confidence path, so the correct policy citation for that field is always the same fixed text. I removed it from judgment entirely rather than keep asking a model to independently rediscover an answer that never varied. I built a permanent regression suite from that saga's lesson — every one of those eleven rounds had been checked only against the single claim that had just failed, with nothing verifying a fix didn't quietly break a claim that had already passed. The suite caught exactly that kind of regression on its first run.
+
+ 
+
+Every status change, override, escalation, and denial writes to an audit log with who, when, and why — a flat, queryable record so a question like "show me every claim approved in March" is answerable directly. A claim's current status is always just its latest log entry, so there's no separate status value that could drift out of sync with the record of how it got there.
+
+ 
+
+---
+
+ 
+
+THE INTERFACE: SIX DESIGN COMBINATIONS, ONE TOKEN SYSTEM
+
+ 
+
+The ClaimsDock UI started from a plain layout I sketched early: a masthead, a claims table, some stat tiles, and a side panel of mini-cards for the assistant, before any of the architecture above existed as running code. That rough shape became the seed for five style directions, explored side by side. I narrowed those five to three, and I was deliberate about what narrowing meant: not picking a winner and discarding the rest, but keeping the three that each carried a genuinely different point of view on the same underlying data:
+• Ledger: reads dense and tabular, built for a high-volume queue where information density is the point. 
+• Clinical: sans-serif, precision-first, closer to how a clinical record reads. 
+• Field: warmer and more approachable, built for a less adversarial read of the same claims. 
+Each of the three ships in both light and dark, six combinations total, driven by a single token architecture. A style-and-brightness pair is one entry in a shared color and type system, so adding a seventh combination later means adding one token block.
+
+
+ The interface went through hands-on iteration across a genuinely large amount of work, the layer an adjuster spends their whole day actually looking at.
+
+ 
+
+---
+
+ 
+
+
+ 
+
+WHAT THIS DEMONSTRATES
+
+ 
+
+ClaimsDock is a deployed system, not a click-through demo that only holds up in a controlled walkthrough. I directed and reviewed the entire build through Claude Code, treating it the way I'd direct an engineering team: deciding architecture on paper before code exists, reviewing every bug and every reversed decision, catching my own assumptions before they became shipped mistakes.
+
+ 
+
+It reflects the way I actually approach a build: decide the architecture before writing code, treat a model as the tool for genuine judgment calls and deterministic code as the tool for everything else, test a tradeoff instead of assuming an answer, and verify a fix against the environment it actually has to survive in. A condensed, phase-by-phase build log, linked separately, covers the full process in more depth than belongs here — every bug, every reversed decision, and the reasoning behind each one.

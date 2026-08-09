@@ -1,10 +1,18 @@
 // Loading is a plain Server Component now (rewritten 2026-08-07) — no
 // client state, no hooks, so there's nothing left to hydrate or remount in
 // the way the old useEffect-driven version had. These tests check the
-// actual mechanism that replaced it: every fact renders into the markup up
-// front, each with a distinct animation-delay, and a shared @keyframes rule
-// sized to however many facts actually exist — the whole point being that
-// none of this depends on client JS ever running at all.
+// mechanism that replaced it: every fact renders into the markup up front,
+// each with a distinct animation-delay — the whole point being that none of
+// this depends on client JS ever running at all.
+//
+// The shared @keyframes rule itself is NOT checked here — it moved to a
+// static rule in loading.module.css (2026-08-08, after a live regression:
+// generating it dynamically and injecting it via a
+// <style dangerouslySetInnerHTML> tag produced byte-correct HTML that still
+// didn't render visibly in production). A rendered-HTML test can't see
+// CSS-module content at all, static or dynamic, so there was never real
+// coverage of the keyframe's own correctness here — only of whether it
+// existed in the markup, which is exactly the assumption that broke.
 import { describe, it, expect } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import Loading from './loading';
@@ -30,14 +38,8 @@ describe('Loading', () => {
     }
   });
 
-  it('defines one shared keyframe, scaled to the actual fact count', () => {
-    expect(html).toContain('@keyframes factSlot');
-    const stops = [...html.matchAll(/([\d.]+)% \{ opacity: (0|1); \}/g)].map((m) => Number(m[1]));
-    // 0%, fade-in-end, fade-out-start, slot-end, 100% — strictly increasing.
-    expect(stops.length).toBe(5);
-    for (let i = 1; i < stops.length; i++) {
-      expect(stops[i]).toBeGreaterThan(stops[i - 1]);
-    }
+  it('never injects a dynamic <style> tag — the regression this guards against', () => {
+    expect(html).not.toContain('<style');
   });
 
   it('marks the fact carousel decorative, since it is not load-bearing information', () => {

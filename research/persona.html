@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ClaimsDock — User Persona: Denise Marsh</title>
+<link rel="stylesheet" href="research.css">
+<style>
+  .wrap { max-width: 640px; margin: 0 auto; padding: 40px 24px 48px; }
+
+  .card-head { display: flex; align-items: center; gap: 20px; margin-bottom: 24px; }
+  .card-head img { width: 88px; height: 88px; border-radius: 50%; border: 1px solid var(--rule); flex-shrink: 0; }
+  .card-head h1 { font-size: 1.4rem; margin: 0 0 4px; }
+  .card-head p.tagline { margin: 0; color: var(--ink-muted); font-size: 0.88rem; }
+
+  .stat-row { display: flex; gap: 10px; margin-bottom: 26px; }
+  .stat { flex: 1; background: var(--paper-raised); border: 1px solid var(--rule); border-radius: 6px; padding: 10px 12px; }
+  .stat .stat-label { display: block; font-size: 0.64rem; letter-spacing: 0.05em; text-transform: uppercase; color: var(--ink-muted); margin-bottom: 3px; }
+  .stat .stat-value { font-family: 'Source Serif 4', Georgia, serif; font-size: 1.05rem; font-weight: 600; }
+
+  section { margin-bottom: 26px; }
+  section h2 { font-size: 0.98rem; margin-bottom: 8px; }
+  section p { margin: 0; font-size: 0.88rem; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .two-col h2 { font-size: 0.98rem; }
+  .two-col ul { margin: 0; padding-left: 18px; font-size: 0.85rem; }
+  .two-col li { margin-bottom: 8px; }
+  .two-col li:last-child { margin-bottom: 0; }
+
+  blockquote {
+    margin: 0; padding: 16px 18px;
+    background: var(--paper-raised); border-left: 3px solid var(--amber);
+    font-family: 'Source Serif 4', Georgia, serif; font-style: italic; font-size: 1rem;
+    color: var(--ink);
+  }
+  blockquote cite { display: block; font-family: -apple-system, sans-serif; font-style: normal; font-size: 0.72rem; color: var(--ink-muted); margin-top: 8px; }
+
+  .aside {
+    background: var(--sage-bg); border-radius: 6px; padding: 14px 16px;
+    font-size: 0.82rem; color: var(--sage-ink);
+  }
+  .aside strong { display: block; font-size: 0.68rem; letter-spacing: 0.04em; text-transform: uppercase; margin-bottom: 5px; }
+
+  .footnote { font-size: 0.74rem; color: var(--ink-muted); border-top: 1px solid var(--rule); padding-top: 14px; margin-top: 8px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <span class="eyebrow">ClaimsDock · UX research · reference material</span>
+
+  <div class="card-head" style="margin-top: 10px;">
+    <img src="../assets/denise.svg" alt="Denise Marsh avatar illustration">
+    <div>
+      <h1>Denise Marsh</h1>
+      <p class="tagline">Senior Claims Adjuster — nine years in, the ambiguous and disputed cases land on her desk, not the routine ones.</p>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat"><span class="stat-label">Age</span><span class="stat-value">41</span></div>
+    <div class="stat"><span class="stat-label">Years in claims</span><span class="stat-value">9</span></div>
+    <div class="stat"><span class="stat-label">Employer</span><span class="stat-value" style="font-size: 0.92rem;">Mid-size regional payer</span></div>
+  </div>
+
+  <section>
+    <h2>A day in her queue</h2>
+    <p>Denise's queue looks deceptively uniform — a stack of flagged claims that could be anything from a coding error to a real fraud pattern. Her actual skill isn't processing volume, it's telling apart a claim that's flagged because something's genuinely wrong from one that's flagged because a rule tripped on a technicality. A good chunk of her day goes to claims that look complicated on the surface and resolve in minutes once she's actually read the documentation — and a smaller number that look routine but turn out to hide something real. The difference is rarely visible from the worklist alone; she has to go looking for it, claim by claim.</p>
+  </section>
+
+  <div class="two-col">
+    <section>
+      <h2>Goals</h2>
+      <ul>
+        <li>Get through her real caseload without losing time to claims that only look ambiguous until she's read them.</li>
+        <li>Be able to stand behind a decision if an auditor or a member's appeal comes back to it months later.</li>
+        <li>Catch a genuine bad actor without relying on memory or gut feel alone across dozens of similar-looking claims.</li>
+        <li>Not miss an SLA deadline she didn't realize was close, buried in a queue sorted by something other than urgency.</li>
+      </ul>
+    </section>
+    <section>
+      <h2>Frustrations</h2>
+      <ul>
+        <li>Can't tell which claims are safe to skim without reading each one closely.</li>
+        <li>Has no way to check an automated recommendation's work before deciding whether to trust it.</li>
+        <li>Feels like she has to accept or reject a finding wholesale — no middle ground for "the flag is right, the math is off."</li>
+        <li>Worries a required review step is a rubber stamp if nothing actually forces real scrutiny.</li>
+      </ul>
+    </section>
+  </div>
+
+  <section>
+    <blockquote>
+      "I don't need the system to make the call for me. I need it to show its work — so when I make the call, I can actually defend it."
+      <cite>Synthesized to represent a realistic point of view — not a verbatim interview quote. No claims adjusters were interviewed for this project.</cite>
+    </blockquote>
+  </section>
+
+  <section>
+    <div class="aside">
+      <strong>Why her skepticism isn't a character quirk</strong>
+      Denise doesn't trust or distrust automated recommendations uniformly — she calibrates, verifying the ones she can check and leaning on the ones she can't. That's not a personality trait invented for this persona; it's a documented pattern in how people actually respond to algorithmic advice when they're given a way to check its accuracy. [1]
+    </div>
+  </section>
+
+  <p class="footnote">
+    [1] de Jong, Bos, van Berkel &amp; Lamers, "Algorithm appreciation or aversion: the effects of accuracy disclosure on users' reliance on algorithmic suggestions," <em>Behaviour &amp; Information Technology</em>, 2025 (peer-reviewed). Full citation detail in the pain-points-to-solutions grid.<br><br>
+    Denise Marsh is a synthesized persona, not a real interview subject — built from general, publicly documented patterns in claims-adjuster caseload composition and workload strain, not a specific survey or named individual. No claims-adjuster interviews were conducted for this project.
+  </p>
+</div>
+
+</body>
+</html>

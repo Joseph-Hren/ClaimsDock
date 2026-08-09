@@ -131,10 +131,22 @@
 }
 
 /* Every fact renders into the DOM at once, absolutely stacked in the same
-   box — cycling is one shared @keyframes animation (defined inline in
-   loading.tsx, since its exact percentages depend on how many facts there
-   are) with a different animation-delay per item, the standard pure-CSS-
-   carousel technique. No JavaScript involved at any point. */
+   box — cycling is one shared @keyframes animation with a different
+   animation-delay per item (set inline in loading.tsx), the standard
+   pure-CSS-carousel technique. No JavaScript involved at any point.
+
+   A first version generated this @keyframes rule dynamically in JS and
+   injected it via a <style dangerouslySetInnerHTML> tag — the raw HTML it
+   produced checked out correct on direct inspection, byte for byte, both
+   locally and on the live deployment, and yet nothing rendered visibly in
+   production (2026-08-08). The likely cause, not fully confirmable from
+   here: React 19's own special hoisting/dedup handling for <style>
+   elements may not play well with a fallback rendered mid-Suspense-stream.
+   This static rule is the same kind the shimmer bars below already use,
+   which has never had this problem — the tradeoff is that its percentages
+   assume exactly 19 facts at 8s each (152s total); loading.tsx throws in
+   dev if FACTS.length * PER_SLOT_S ever drifts from that 152s, as a
+   reminder to recompute both together. */
 .factItem {
   position: absolute;
   inset: 0;
@@ -145,9 +157,25 @@
   line-height: 1.5;
   color: var(--ink-primary);
   opacity: 0;
-  animation-name: factSlot;
-  animation-iteration-count: infinite;
-  animation-timing-function: linear;
+  animation: factSlot 152s linear infinite;
+}
+
+@keyframes factSlot {
+  0% {
+    opacity: 0;
+  }
+  0.3289% {
+    opacity: 1;
+  }
+  4.9342% {
+    opacity: 1;
+  }
+  5.2632% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

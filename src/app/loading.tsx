@@ -23,6 +23,23 @@ import styles from './loading.module.css';
 // keyframe animation (with a per-item delay, computed below) handles the
 // cycling entirely on the browser's own compositor — the same reason the
 // shimmer bars already kept animating even when the fact text didn't.
+//
+// Second live regression, 2026-08-08: that first version generated the
+// @keyframes rule dynamically in JS and injected it via a
+// `<style dangerouslySetInnerHTML>` tag. The raw HTML it produced was byte-
+// for-byte correct in every check run against it (both locally and on the
+// live deployment — confirmed down to the actual bytes, not just how a
+// terminal displayed them), yet no facts rendered visibly at all in
+// production. The likely cause, never fully confirmed since it can't be
+// observed from here: React 19 gives `<style>` elements special hoisting/
+// dedup handling, and that mechanism may not play well with a fallback
+// rendered mid-Suspense-stream. Rather than chase an exact mechanism that
+// can only really be confirmed in a live browser, this moves to the
+// strictly safer option already proven in this same file — the shimmer
+// bars' own `@keyframes` is a plain, static rule in the CSS module, and has
+// never had this problem. `factSlot` below is now the same kind of static
+// rule; only animation-delay (a plain per-element inline style, nothing
+// injected as a `<style>` tag) still varies per item.
 
 const FACTS: string[] = [
   "ClaimsDock's interface has three distinct visual styles: Ledger, Clinical, and Field — switchable in the Settings panel.",
@@ -46,29 +63,23 @@ const FACTS: string[] = [
   "ClaimsDock's document search runs on locally-hosted embeddings — no claim data is sent to a third party just to answer a policy question.",
 ];
 
-const FADE_S = 0.5;
-const HOLD_S = 7;
-const PER_SLOT_S = FADE_S + HOLD_S + FADE_S;
-const TOTAL_S = FACTS.length * PER_SLOT_S;
+// Per-item spacing only — the shared keyframe's own percentages (and its
+// matching 152s duration) are now a static rule in loading.module.css, not
+// computed here (see this file's header comment for why). This constant
+// must keep matching FACTS.length * PER_SLOT_S exactly, or an item's delay
+// could exceed the shared animation's own duration and land it a full cycle
+// off from where it belongs — checked below, dev-only, since a silent drift
+// here wouldn't throw, it would just make the cycling look subtly wrong.
+const PER_SLOT_S = 8;
+const EXPECTED_TOTAL_S = 152;
 
-// One shared keyframe, expressed as a fraction of the *entire* loop, reused
-// by every fact via a per-item positive animation-delay (i * PER_SLOT_S) —
-// the standard pure-CSS-carousel technique. Computed from FACTS.length
-// rather than hardcoded, so this stays correct if a fact is ever added or
-// removed without anyone needing to hand-recompute percentages.
-const fadeInEndPct = (FADE_S / TOTAL_S) * 100;
-const fadeOutStartPct = ((PER_SLOT_S - FADE_S) / TOTAL_S) * 100;
-const slotEndPct = (PER_SLOT_S / TOTAL_S) * 100;
-
-const KEYFRAMES_CSS = `
-@keyframes factSlot {
-  0% { opacity: 0; }
-  ${fadeInEndPct}% { opacity: 1; }
-  ${fadeOutStartPct}% { opacity: 1; }
-  ${slotEndPct}% { opacity: 0; }
-  100% { opacity: 0; }
+if (process.env.NODE_ENV !== 'production' && FACTS.length * PER_SLOT_S !== EXPECTED_TOTAL_S) {
+  throw new Error(
+    `loading.tsx: FACTS.length (${FACTS.length}) * PER_SLOT_S (${PER_SLOT_S}) must equal EXPECTED_TOTAL_S ` +
+      `(${EXPECTED_TOTAL_S}), which must in turn match .factItem's hardcoded animation-duration in ` +
+      `loading.module.css. Update both together if a fact is ever added or removed.`,
+  );
 }
-`;
 
 export default function Loading() {
   // Randomized once per request, server-side — no client JS needed to pick
@@ -98,7 +109,6 @@ export default function Loading() {
         this may take a few minutes. Later loads this week will be instant.
       </p>
 
-      <style dangerouslySetInnerHTML={{ __html: KEYFRAMES_CSS }} />
       {/* Decorative trivia, not load-bearing information — the status line
           above already says what's actually happening. All facts are
           simultaneously present in the DOM (only CSS opacity distinguishes
@@ -107,11 +117,7 @@ export default function Loading() {
           back-to-back with no useful signal — aria-hidden avoids that. */}
       <div className={styles.factStack} aria-hidden="true">
         {order.map((factIndex, position) => (
-          <p
-            key={factIndex}
-            className={styles.factItem}
-            style={{ animationDelay: `${position * PER_SLOT_S}s`, animationDuration: `${TOTAL_S}s` }}
-          >
+          <p key={factIndex} className={styles.factItem} style={{ animationDelay: `${position * PER_SLOT_S}s` }}>
             {FACTS[factIndex]}
           </p>
         ))}

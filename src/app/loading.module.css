@@ -123,11 +123,16 @@
   position: relative;
   width: 100%;
   max-width: 560px;
-  /* Fixed height reserved for the longest fact (5 lines at this font-size/
-     max-width, with margin) so cycling never shifts anything above it — a
-     shorter fact just leaves empty space below itself within this box,
-     rather than the block resizing. */
-  height: 7.5em;
+  /* Fixed height reserved for the longest fact, plus real headroom — so
+     cycling never shifts anything above it, and a shorter fact just leaves
+     empty space below itself rather than the block resizing. 7.5em (5
+     lines at this font-size/line-height) looked right on paper but clipped
+     a real fact's last line in production (2026-08-09) — line-height's
+     exact rendered height isn't perfectly predictable across engines, and
+     the longest fact (202 characters) needs close to 5 full lines on its
+     own, leaving zero real margin at an exact 5-line box. 9em (6 lines'
+     worth) gives it room. */
+  height: 9em;
 }
 
 /* Every fact renders into the DOM at once, absolutely stacked in the same

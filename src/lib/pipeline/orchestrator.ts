@@ -149,11 +149,34 @@ export function buildClaimResult(
 // only actually chunks once there's enough volume to need it.
 // Bumped 20 -> 22 (2026-08-06) alongside the 132-claim expansion, specifically
 // so 132/22 = 6 exactly — no rounding ambiguity in the numChunks formula below
-// (132/20 would round to 7, one more chunk than intended). Chosen to hit this
-// claim count's own chunk-count target, not a universal ideal; a future claim
-// count that doesn't divide evenly by 22 still gets a reasonable chunk count
-// from the same rounding formula, just not as clean a split.
-const PIPELINE_TARGET_CHUNK_SIZE = 22;
+// (132/20 would round to 7, one more chunk than intended).
+//
+// Bumped again, 22 -> 14 (2026-08-09), after live visitor reports of a slow
+// cold load — since chunks run concurrently (Promise.all below), wall-clock
+// time is set by the SLOWEST chunk, not total work, so smaller chunks don't
+// obviously help or hurt on their own: fewer claims per chunk means less for
+// that chunk to generate, but every chunk still re-pays this Pipeline's own
+// large system prompt in full, and more chunks means more independent
+// chances for one to need a retry, with the whole batch waiting on it.
+// Measured live (scripts/diagnose-token-usage.ts) rather than assumed,
+// against the full 132-claim set — 6 chunks (size 22, the prior default):
+// 205.8s, clean; 8 (size 16): 342.3s, hit 3 retries on one chunk; 9 (size
+// 14): 167.7s and 164.4s across two separate clean trials; 10 (size 13):
+// 222.2s, hit 2 retries; 12 (size 11): 258.4s, clean. 9 was the only chunk
+// count run twice, specifically to check the first result wasn't a fluke —
+// the two trials landed within 3.3s of each other, real confirmation, not
+// just one lucky run. 8 and 10 both hit the same transient parse-error
+// retry on the same chunk position, which reads as genuine run-to-run
+// noise (Promise.all waits on the slowest chunk, so one retry anywhere
+// dominates that run's total) rather than something specific to those
+// chunk counts — but even so, neither came close to 9's clean numbers. 14
+// is not claimed to be the exact global optimum, just the clear best of
+// what was actually tested, confirmed twice.
+//
+// Overridable via PIPELINE_CHUNK_SIZE_OVERRIDE for future live timing
+// comparisons (run scripts/diagnose-token-usage.ts with it set) — unset in
+// every real deployment, so this changes nothing about normal behavior.
+const PIPELINE_TARGET_CHUNK_SIZE = Number(process.env.PIPELINE_CHUNK_SIZE_OVERRIDE) || 14;
 
 export async function runPipeline(
   now: Date = new Date(),

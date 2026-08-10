@@ -706,6 +706,25 @@
           </div>
         </li>
 
+        <li>
+          <div class="session">
+            <div class="session-head"><h3>Chunk-count tuning, and removing the Call1/Call2 barrier</h3><span class="pill pill--done">Done</span></div>
+            <p class="session-summary">orchestrator.ts — live timing comparisons, then a real concurrency fix</p>
+            <p>A live visitor report of a slow cold load led to measuring chunk count directly rather than guessing: 6, 8, 9 (twice), 10, and 12 chunks against the full 132-claim set, using a diagnostic script built for exactly this. 9 chunks (size 14) was the clear, twice-confirmed winner — the only count tested twice specifically to rule out a lucky run — and is now the default, replacing the prior default of 22.</p>
+            <p>A second, more structural fix followed: every chunk's own Call 2 previously had to wait for <em>every</em> chunk's Call 1 to finish first, a global barrier that erased almost all of the time a fast chunk had actually saved. Each chunk now runs its own complete Call 1 → Call 2 sequence independently, verified live via timestamped logs showing the first Call 2 result landing while other chunks were still on Call 1. The real trade-off: Call 2 no longer gets rebalanced across chunks by each claim's confirmed category, since that rebalancing needed every chunk's Call 1 result at once — the same thing this removes. A separate live test of switching the corpus to real RAG retrieval (rather than full-context stuffing) in these same two calls found no time savings, possibly the opposite, and was not pursued.</p>
+          </div>
+        </li>
+
+        <li>
+          <div class="session">
+            <div class="session-head"><h3>Progressive Pipeline rendering, and the Figma-specced loading toasters</h3><span class="pill pill--done">Done</span></div>
+            <p class="session-summary">DashboardLoader.tsx · progress.ts · LoadingToast.tsx · a client-hydration bug and two Anchor pill bugs</p>
+            <p>The homepage no longer sits behind one all-or-nothing wait for the full Pipeline run. Each chunk's merge into a finished, render-ready result now fires a callback the moment it's ready — the same independence the Call1/Call2 barrier removal made possible — which a new in-memory per-week tracker picks up without touching the existing cache's own key. A polled endpoint exposes that partial state, and a new client-side loader renders a growing worklist as chunks land instead of one blocking screen, falling back to the existing branded loading experience (moved into <code>components/</code> so it could be reused directly) until the first real chunk arrives.</p>
+            <p>Alongside this, two blue/green toaster notifications specified in Figma — "still loading" and "pipeline complete" — were built with their real animation timing (a genuine height transition that pushes the rest of the page down, not an overlay) and wired to this same real state, replacing an earlier timer-based stand-in used to review the animation before the real signal existed.</p>
+            <p>Three real bugs surfaced live during this pass, not in testing: rendering the loading screen from inside a real client-hydrated tree (rather than its old life as a Suspense fallback that was simply discarded, never reconciled) produced a genuine hydration mismatch, since the server and client each picked a different random fact order — fixed by rendering a fixed order on mount and shuffling only afterward. Separately, Anchor's suggested-prompt pills started reshuffling on every chunk update, traced to an unmemoized array being handed to an effect that shouldn't have been reactive to it at all; fixing that then surfaced a second issue — the pills also needed an explicit redraw after a real question, which had previously only worked by the same accident that caused the first bug.</p>
+          </div>
+        </li>
+
       </ol>
     </div>
   </section>
@@ -776,7 +795,7 @@
   <div class="col">
     <p>Living document — updated alongside the build, not after it.</p>
     <p>Source: <a href="https://github.com/Joseph-Hren/ClaimsDock">github.com/Joseph-Hren/ClaimsDock</a></p>
-    <p>Prototype built with Claude Code · this page last updated August 6, 2026.</p>
+    <p>Prototype built with Claude Code · this page last updated August 10, 2026.</p>
   </div>
   </div>
 </footer>

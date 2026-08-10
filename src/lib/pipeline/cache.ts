@@ -74,6 +74,7 @@ import { unstable_cache } from 'next/cache';
 import { getISOWeekKey } from '../claims/iso-week';
 import { generateClaims } from '../claims/generate-claims';
 import { runPipeline, type PipelineClaimResult } from './orchestrator';
+import { startProgress, appendProgress } from './progress';
 
 // A cheap fingerprint of the claims the live Pipeline is actually about to
 // process (generateClaims()'s own output — the full authored set now that
@@ -118,12 +119,23 @@ function isoWeekAnchorDate(isoWeekKey: number): Date {
 const PIPELINE_PROVIDER = 'kimi' as const;
 
 const getResultsForIsoWeek = unstable_cache(
-  // seedFingerprint isn't read below — its only job is to be a distinct
-  // argument value so a changed seed set produces a distinct cache key (see
-  // seedFingerprint's own comment above).
+  // seedFingerprint's first job is still just being a distinct argument
+  // value so a changed seed set produces a distinct cache key (see
+  // seedFingerprint's own comment above) — its second, added 2026-08-10, is
+  // forming the exact same pendingKey getCachedPipelineResults below uses,
+  // so progress.ts's side channel and the real cache key never drift apart.
+  // This function body only runs on a genuine cache miss — a cache hit skips
+  // it entirely, meaning startProgress/appendProgress never fire for an
+  // already-warm week. That's fine: /api/pipeline/progress finalizes
+  // progress unconditionally off this same function's returned promise,
+  // hit or miss alike (see that route).
   async (isoWeek: number, seedFingerprint: string): Promise<PipelineClaimResult[]> => {
-    void seedFingerprint;
-    return runPipeline(isoWeekAnchorDate(isoWeek), PIPELINE_PROVIDER);
+    const progressKey = `${isoWeek}:${seedFingerprint}`;
+    const claims = generateClaims(isoWeekAnchorDate(isoWeek));
+    startProgress(progressKey, claims.length);
+    return runPipeline(isoWeekAnchorDate(isoWeek), PIPELINE_PROVIDER, undefined, (chunkResults) => {
+      appendProgress(progressKey, chunkResults);
+    });
   },
   ['pipeline-results-by-iso-week'],
   { revalidate: false },
@@ -137,6 +149,11 @@ const getResultsForIsoWeek = unstable_cache(
 // genuinely concurrent same-process requests, same as the old code's own
 // `pending` variable.
 const pendingByWeek = new Map<string, Promise<PipelineClaimResult[]>>();
+
+/** Same key shape as getCachedPipelineResults' own pendingKey — the join between this file's cache and progress.ts's side channel. */
+export function getPipelineProgressKey(now: Date): string {
+  return `${getISOWeekKey(now)}:${seedFingerprint(now)}`;
+}
 
 export async function getCachedPipelineResults(now: Date = new Date()): Promise<PipelineClaimResult[]> {
   const isoWeek = getISOWeekKey(now);

@@ -1,15 +1,14 @@
-import Dashboard from '../components/Dashboard';
-import { buildDashboardRows } from '../lib/ui/dashboard-rows';
+import DashboardLoader from '../components/DashboardLoader';
 
 // Without this, Next.js's default static-generation behavior tries to
-// prerender this page at *build* time — meaning every `next build` would
-// trigger a real, live, costly Evaluation Pipeline run, with no way to know
-// the in-memory per-ISO-week cache (lib/pipeline/cache.ts) makes repeated
-// real requests cheap. Forcing this dynamic renders per-request instead,
-// which is what actually lets that cache do its job.
+// prerender this page at *build* time. This page no longer awaits anything
+// itself (progressive loading moved that wait into DashboardLoader.tsx,
+// 2026-08-10 — see that file), but force-dynamic is kept regardless: a
+// prerendered version of this shell would bake in whatever request-time
+// values existed at build time, which is never correct for a per-request
+// dashboard.
 export const dynamic = 'force-dynamic';
 
-export default async function Home() {
-  const rows = await buildDashboardRows();
-  return <Dashboard rows={rows} />;
+export default function Home() {
+  return <DashboardLoader />;
 }

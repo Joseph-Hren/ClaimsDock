@@ -178,10 +178,16 @@ export function buildClaimResult(
 // every real deployment, so this changes nothing about normal behavior.
 const PIPELINE_TARGET_CHUNK_SIZE = Number(process.env.PIPELINE_CHUNK_SIZE_OVERRIDE) || 14;
 
+export interface ChunkProgress {
+  chunkIndex: number;
+  totalChunks: number;
+}
+
 export async function runPipeline(
   now: Date = new Date(),
   provider: ModelProvider = 'anthropic',
   claimLimit?: number,
+  onChunkComplete?: (results: PipelineClaimResult[], progress: ChunkProgress) => void,
 ): Promise<PipelineClaimResult[]> {
   const claims = generateClaims(now, claimLimit);
   const providerHistory = getProviderHistory();
@@ -241,6 +247,15 @@ export async function runPipeline(
   // the barrier this removes, so it's gone: both calls now use Call 1's own
   // grouping (distributeClaimsForAnalysis, already category-aware, just
   // against the expected category rather than the confirmed one).
+  // Each chunk's own buildClaimResult merge happens right here, inline, as
+  // soon as that chunk's own Call 2 finishes (2026-08-10) — previously
+  // deferred to one final .map() over every chunk's flattened output, which
+  // meant a chunk's result wasn't actually usable (only "fetched") until the
+  // whole Promise.all resolved. Merging per chunk is what lets a caller
+  // (onChunkComplete) observe a fully-finished, render-ready result the
+  // moment its own chunk lands, independent of every other chunk's pace —
+  // the real prerequisite for progressive rendering the 2026-08-09 barrier
+  // removal above was building toward.
   const chunkResults = await Promise.all(
     claimChunks.map(async (chunk, i) => {
       const analysisResults = await withChunkRetry(
@@ -268,20 +283,19 @@ export async function runPipeline(
           ),
         `runPipeline: Call 2 chunk ${i + 1}/${numChunks}`,
       );
-      return { reconciledChunk, confidenceResultsChunk };
+      const confidenceByIdChunk = new Map(confidenceResultsChunk.map((r) => [r.claim_id, r]));
+      const builtChunk = reconciledChunk.map((r) => {
+        const claim = byId.get(r.claim_id)!;
+        const confidence = confidenceByIdChunk.get(r.claim_id);
+        if (!confidence) {
+          throw new Error(`runPipeline: Call 2 returned no result for claim_id "${r.claim_id}"`);
+        }
+        return buildClaimResult(claim, r, confidence, now);
+      });
+      onChunkComplete?.(builtChunk, { chunkIndex: i, totalChunks: numChunks });
+      return builtChunk;
     }),
   );
 
-  const reconciled = chunkResults.flatMap((c) => c.reconciledChunk);
-  const confidenceResults = chunkResults.flatMap((c) => c.confidenceResultsChunk);
-  const confidenceById = new Map(confidenceResults.map((r) => [r.claim_id, r]));
-
-  return reconciled.map((r) => {
-    const claim = byId.get(r.claim_id)!;
-    const confidence = confidenceById.get(r.claim_id);
-    if (!confidence) {
-      throw new Error(`runPipeline: Call 2 returned no result for claim_id "${r.claim_id}"`);
-    }
-    return buildClaimResult(claim, r, confidence, now);
-  });
+  return chunkResults.flat();
 }

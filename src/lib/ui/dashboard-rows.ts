@@ -9,7 +9,7 @@
 // has no reason to carry.
 
 import { generateClaims } from '../claims/generate-claims';
-import { buildClaimNumberRegistry } from '../claims/claim-number';
+import { buildClaimNumberRegistry, type ClaimNumberRegistry } from '../claims/claim-number';
 import { getCachedPipelineResults } from '../pipeline/cache';
 import type { PipelineClaimResult } from '../pipeline/orchestrator';
 import { getMemberBenefitStatus } from '../rules/coverage-lookup';
@@ -66,6 +66,44 @@ function providerNameOf(claim: Claim): string {
   return claim.form_type === 'CMS-1500' ? (claim.box33_billing_provider.name ?? '(missing)') : claim.billing_provider_name;
 }
 
+/**
+ * The single per-claim merge from a raw Pipeline result to a display-ready
+ * row — factored out (2026-08-10) so the progressive-loading path
+ * (buildDashboardRowsFromResults below) can build the exact same row shape
+ * from a partial results set, not just buildDashboardRows' own
+ * every-claim-present case.
+ */
+function buildRow(claim: GeneratedClaim, result: PipelineClaimResult, registry: ClaimNumberRegistry): DashboardClaimRow {
+  const missingFieldIsMaterial =
+    result.category === 'missing-data' ? result.missing_fields.some((f) => f.material) : undefined;
+  const isAutoApproved =
+    result.status === 'Resolved' &&
+    deriveInitialStatus({ category: result.category, missingFieldIsMaterial }) === 'Submitted, no flags';
+  const benefitStatus = getMemberBenefitStatus(claim);
+
+  return {
+    claim,
+    displayNumber: registry.toDisplay(claim.claim_id),
+    result,
+    linkedDisplayNumber: claim.linked_claim_id ? registry.toDisplay(claim.linked_claim_id) : null,
+    patientName: claim.patient.name,
+    providerName: providerNameOf(claim),
+    category: result.category,
+    evidence: result.evidence,
+    recommendationNarrative: result.recommendation_narrative,
+    deductibleRemaining: benefitStatus.deductibleRemaining,
+    isInNetwork: benefitStatus.isInNetwork,
+    inpatientDaysUsedThisPlanYear: benefitStatus.inpatientDaysUsedThisPlanYear,
+    annualInpatientDayCap: benefitStatus.annualInpatientDayCap,
+    status: result.status,
+    isAutoApproved,
+    severity: result.severity,
+    confidence: result.confidence_tier,
+    recommendedAction: result.recommended_action,
+    sla: result.sla,
+  };
+}
+
 export async function buildDashboardRows(now: Date = new Date()): Promise<DashboardClaimRow[]> {
   const claims = generateClaims(now);
   const registry = buildClaimNumberRegistry(claims.map((c) => c.claim_id));
@@ -77,34 +115,25 @@ export async function buildDashboardRows(now: Date = new Date()): Promise<Dashbo
     if (!result) {
       throw new Error(`buildDashboardRows: no Pipeline result for claim_id "${claim.claim_id}"`);
     }
+    return buildRow(claim, result, registry);
+  });
+}
 
-    const missingFieldIsMaterial =
-      result.category === 'missing-data' ? result.missing_fields.some((f) => f.material) : undefined;
-    const isAutoApproved =
-      result.status === 'Resolved' &&
-      deriveInitialStatus({ category: result.category, missingFieldIsMaterial }) === 'Submitted, no flags';
-    const benefitStatus = getMemberBenefitStatus(claim);
+/**
+ * Progressive-loading counterpart to buildDashboardRows — builds rows for
+ * whatever subset of results has completed so far, instead of requiring
+ * every claim to be present. Pure and synchronous: the caller
+ * (/api/pipeline/progress) already has `results` from progress.ts's side
+ * channel, so there's nothing left to await here.
+ */
+export function buildDashboardRowsFromResults(now: Date, results: PipelineClaimResult[]): DashboardClaimRow[] {
+  const claims = generateClaims(now);
+  const registry = buildClaimNumberRegistry(claims.map((c) => c.claim_id));
+  const claimsById = new Map(claims.map((c) => [c.claim_id, c]));
 
-    return {
-      claim,
-      displayNumber: registry.toDisplay(claim.claim_id),
-      result,
-      linkedDisplayNumber: claim.linked_claim_id ? registry.toDisplay(claim.linked_claim_id) : null,
-      patientName: claim.patient.name,
-      providerName: providerNameOf(claim),
-      category: result.category,
-      evidence: result.evidence,
-      recommendationNarrative: result.recommendation_narrative,
-      deductibleRemaining: benefitStatus.deductibleRemaining,
-      isInNetwork: benefitStatus.isInNetwork,
-      inpatientDaysUsedThisPlanYear: benefitStatus.inpatientDaysUsedThisPlanYear,
-      annualInpatientDayCap: benefitStatus.annualInpatientDayCap,
-      status: result.status,
-      isAutoApproved,
-      severity: result.severity,
-      confidence: result.confidence_tier,
-      recommendedAction: result.recommended_action,
-      sla: result.sla,
-    };
+  return results.flatMap((result) => {
+    const claim = claimsById.get(result.claim_id);
+    if (!claim) return [];
+    return [buildRow(claim, result, registry)];
   });
 }

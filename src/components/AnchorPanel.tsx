@@ -83,10 +83,21 @@ export default function AnchorPanel({
   // this async, matching the project's rule against synchronous setState
   // inside an effect body.
   const [pills, setPills] = useState<string[]>([]);
+  // Drawn once, on mount only (deliberately not depending on providerNames)
+  // — providerNames is a new array reference (Dashboard.tsx derives it
+  // fresh from rows every render) on every one of DashboardLoader's
+  // progressive-loading polls (2026-08-10), so depending on it here
+  // reshuffled the pills on every chunk that finished loading, a
+  // distracting flicker unrelated to anything the adjuster did. mount-time
+  // providerNames is what's captured below, via the closure — AnchorPanel
+  // itself doesn't mount until Dashboard does (DashboardLoader withholds it
+  // until the first chunk of rows exists), so there's always at least one
+  // real provider name available by then.
   useEffect(() => {
     const timer = setTimeout(() => setPills(pickSuggestedPrompts(4, { scope: 'general', providerNames })), 0);
     return () => clearTimeout(timer);
-  }, [providerNames]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
   // Newest first (index 0) — every exchange accumulates rather than
@@ -168,6 +179,15 @@ export default function AnchorPanel({
       setHistory((prev) => [exchange, ...prev]);
       setStatus('idle');
       setInput('');
+      // Fresh suggestions after each real question — an explicit redraw
+      // here, not a side effect of some other re-render, now that the pill
+      // effect above only fires once on mount (2026-08-10). Previously this
+      // "worked" only by accident: providerNames was a new array reference
+      // on every Dashboard render, so any re-render (including the one this
+      // very answer caused) happened to retrigger the old
+      // providerNames-dependent effect too — which was also exactly why it
+      // wrongly refired on every progressive-loading chunk.
+      setPills(pickSuggestedPrompts(4, { scope: 'general', providerNames }));
     } catch (err) {
       setErrorMessage(err instanceof Error ? err.message : 'Anchor could not answer that.');
       setStatus('error');

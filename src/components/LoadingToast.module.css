@@ -1,0 +1,73 @@
+/* A real height animation, not an overlay — the toast pushes the content
+   below it down as it opens, and lets it move back up as it closes, rather
+   than sliding on top without disturbing the layout (2026-08-10, changed
+   after reviewing the overlay version live). */
+.wrap {
+  height: 0;
+  overflow: hidden;
+  transition: height 0.8s ease;
+}
+.wrap.shown {
+  height: 32px;
+}
+
+.loading {
+  background: var(--badge-blue-bg);
+  color: var(--badge-blue-text);
+}
+.complete {
+  background: var(--badge-green-bg);
+  color: var(--badge-green-text);
+}
+
+.inner {
+  /* Fixed, not a percentage of .wrap — .wrap animates from 0, and a
+     percentage height would squash this along with it instead of staying
+     full-size and simply being revealed as .wrap's own height grows. */
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 48px;
+  font-family: var(--font-body);
+}
+
+.left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.message {
+  margin: 0;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
+  color: inherit;
+}
+
+.closeLabel {
+  font-size: 0.5rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.closeX {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrap {
+    transition: none;
+  }
+}

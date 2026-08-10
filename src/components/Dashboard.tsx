@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './Dashboard.module.css';
 import Masthead from './Masthead';
+import LoadingToast from './LoadingToast';
 import StatTiles from './StatTiles';
 import ClaimsTable from './ClaimsTable';
 import ClaimsCard from './ClaimsCard';
@@ -54,7 +55,7 @@ const FADE_OUT_MS = 320;
 // undo affordance on every action's confirm screen.
 const GRACE_WINDOW_MS = 4200;
 
-export default function Dashboard({ rows }: { rows: DashboardClaimRow[] }) {
+export default function Dashboard({ rows, isComplete }: { rows: DashboardClaimRow[]; isComplete: boolean }) {
   // Read once, lazily — SSR has no localStorage (window is undefined there),
   // so the initial server render always uses the default; the client's own
   // first render reads the real saved value. No effect needed: nothing here
@@ -75,6 +76,26 @@ export default function Dashboard({ rows }: { rows: DashboardClaimRow[] }) {
   const [modal, setModal] = useState<ModalState>({ layer: 'none' });
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [diagramOpen, setDiagramOpen] = useState(false);
+
+  // Real progressive-loading toast state (2026-08-10) — replaces the prior
+  // 28s-delay simulation harness. The blue toast shows only if Dashboard
+  // first mounts mid-load (isComplete false at that moment); it dismisses on
+  // its own schedule (LoadingToast's own HOLD_MS), independent of the real
+  // pipeline's pace. The green toast is a real state-transition watcher, not
+  // a timer — it fires exactly when isComplete flips from false to true,
+  // whenever that actually happens (which may be before or after the blue
+  // toast has already dismissed itself). If isComplete is already true on
+  // first mount (a warm cache hit — nothing progressive actually happened
+  // from this visitor's perspective), neither toast shows at all.
+  const [showLoadingToast, setShowLoadingToast] = useState(() => !isComplete);
+  const [showCompleteToast, setShowCompleteToast] = useState(false);
+  const wasCompleteRef = useRef(isComplete);
+  useEffect(() => {
+    if (!wasCompleteRef.current && isComplete) {
+      setShowCompleteToast(true);
+    }
+    wasCompleteRef.current = isComplete;
+  }, [isComplete]);
   // True only for the brief window openLinkedClaim spends at layer:'none'
   // between closing the old card and mounting the new one — keeps the shade
   // out of that cycle so it stays solidly up throughout the swap; only the
@@ -339,7 +360,13 @@ export default function Dashboard({ rows }: { rows: DashboardClaimRow[] }) {
     }, FADE_OUT_MS);
   }
 
-  const providerNames = Array.from(new Set(rows.map((r) => r.providerName)));
+  // Memoized off a content key (a plain joined string), not [rows] itself —
+  // rows changes reference on every progressive-loading poll (DashboardLoader,
+  // 2026-08-10), and memoizing on [rows] would still recompute (and hand
+  // AnchorPanel a new array) on every claim-level field update, not just a
+  // real change to the distinct-provider set.
+  const providerNamesKey = Array.from(new Set(rows.map((r) => r.providerName))).join('|');
+  const providerNames = useMemo(() => (providerNamesKey ? providerNamesKey.split('|') : []), [providerNamesKey]);
 
   // Shade sits just below whichever layer is currently topmost — card (z=20)
   // normally, or above the card (z=40) once a confirmation overlay opens —
@@ -349,6 +376,8 @@ export default function Dashboard({ rows }: { rows: DashboardClaimRow[] }) {
   return (
     <div className={styles.page}>
       <Masthead onOpenSettings={() => setSettingsOpen((o) => !o)} />
+      {showLoadingToast && <LoadingToast kind="loading" onDismissed={() => setShowLoadingToast(false)} />}
+      {showCompleteToast && <LoadingToast kind="complete" onDismissed={() => setShowCompleteToast(false)} />}
       <SettingsPanel
         open={settingsOpen}
         style={style}

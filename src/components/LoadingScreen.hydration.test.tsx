@@ -1,12 +1,12 @@
-// Loading is a plain Server Component now (rewritten 2026-08-07) — no
-// client state, no hooks, so there's nothing left to hydrate or remount in
-// the way the old useEffect-driven version had. These tests check the
-// mechanism that replaced it: every fact renders into the markup up front,
-// each with a distinct animation-delay — the whole point being that none of
-// this depends on client JS ever running at all.
+// LoadingScreen has no client state and no hooks (rewritten 2026-08-07,
+// moved from app/loading.tsx to here 2026-08-10) — so there's nothing to
+// hydrate or remount in the way an old useEffect-driven version had. These
+// tests check the mechanism that replaced it: every fact renders into the
+// markup up front, each with a distinct animation-delay — the whole point
+// being that none of this depends on client JS ever running at all.
 //
-// The shared @keyframes rule itself is NOT checked here — it moved to a
-// static rule in loading.module.css (2026-08-08, after a live regression:
+// The shared @keyframes rule itself is NOT checked here — it's a static
+// rule in LoadingScreen.module.css (2026-08-08, after a live regression:
 // generating it dynamically and injecting it via a
 // <style dangerouslySetInnerHTML> tag produced byte-correct HTML that still
 // didn't render visibly in production). A rendered-HTML test can't see
@@ -15,10 +15,10 @@
 // existed in the markup, which is exactly the assumption that broke.
 import { describe, it, expect } from 'vitest';
 import { renderToString } from 'react-dom/server';
-import Loading from './loading';
+import LoadingScreen from './LoadingScreen';
 
-describe('Loading', () => {
-  const html = renderToString(<Loading />);
+describe('LoadingScreen', () => {
+  const html = renderToString(<LoadingScreen />);
 
   it('renders every fact into the markup at once, not just one at a time', () => {
     const factItemCount = (html.match(/class="[^"]*factItem[^"]*"/g) ?? []).length;

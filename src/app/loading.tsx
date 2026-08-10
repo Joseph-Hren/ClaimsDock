@@ -106,7 +106,7 @@ export default function Loading() {
 
       <p className={styles.status}>
         ClaimsDock is running the evaluation pipeline for new claims —<br />
-        this may take a few minutes. Later loads this week will be instant.
+        this may take a few minutes, usually about 160 seconds. Later loads this week will be instant.
       </p>
 
       {/* Decorative trivia, not load-bearing information — the status line

@@ -76,7 +76,12 @@ export default function SettingsPanel({
 
   return (
     <div ref={rootRef} className={`${popoverStyles.panel} ${popoverStyles.alignRight} ${styles.panel}`}>
-      <h3 className={styles.title}>Settings</h3>
+      <div className={styles.headerRow}>
+        <h3 className={styles.title}>Settings</h3>
+        <button className={styles.close} onClick={onClose} aria-label="Close">
+          Close ×
+        </button>
+      </div>
       <div className={styles.divider} />
 
       <div className={styles.section}>

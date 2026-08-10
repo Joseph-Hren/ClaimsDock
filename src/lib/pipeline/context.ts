@@ -13,6 +13,11 @@ import { CORPORA } from '../../../content/corpora/manifest';
 let corpusContext: string | null = null;
 
 export function getFullCorpusContext(): string {
+  // Test-only escape hatch for isolating the corpus's own contribution to
+  // request latency (does full-context stuffing meaningfully slow a call
+  // down, independent of everything else) — unset in every real
+  // deployment, so this changes nothing about normal behavior.
+  if (process.env.PIPELINE_STRIP_CORPUS_FOR_TEST === '1') return '';
   if (corpusContext === null) {
     // process.cwd(), not __dirname — this code was never actually bundled
     // for a real Next.js route handler before Pass A1 (only exercised via

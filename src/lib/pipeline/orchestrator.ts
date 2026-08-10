@@ -17,7 +17,7 @@ import type { GeneratedClaim } from '../claims/types';
 import { buildClaimNumberRegistry } from '../claims/claim-number';
 import { runAnalysis, type AnalysisResult } from './analysis';
 import { runConfidence, type ConfidenceResult } from './confidence';
-import { distributeClaimsForAnalysis, distributeEvenlyByCategory } from './chunk';
+import { distributeClaimsForAnalysis } from './chunk';
 import { withChunkRetry } from './batch-retry';
 import type { ModelProvider } from './model-client';
 import { detectMissingFields, type MissingFieldFinding } from '../rules/missing-fields';
@@ -216,35 +216,48 @@ export async function runPipeline(
   // together in one chunk, load-bearing for cross-claim fraud/complex-math
   // reasoning, not just a distribution nicety.
   const claimChunks = distributeClaimsForAnalysis(claims, numChunks);
-  const analysisResultsByChunk = await Promise.all(
-    claimChunks.map((chunk, i) =>
-      withChunkRetry(() => runAnalysis(chunk, providerHistory, registry, provider), `runPipeline: Call 1 chunk ${i + 1}/${numChunks}`),
-    ),
-  );
-  const analysisResults = analysisResultsByChunk.flat();
 
-  const reconciled = analysisResults.map((r) => {
-    const claim = byId.get(r.claim_id);
-    if (!claim) {
-      throw new Error(`runPipeline: Call 1 returned an unknown claim_id "${r.claim_id}"`);
-    }
-    return reconcileCategory(claim, r);
-  });
-
-  // Re-chunked independently from Call 1's own grouping above — Call 2's
-  // findings have no cross-chunk dependency on each other (unlike Call 1's
-  // linked-pair requirement), so there's no need to preserve the same claim
-  // groupings between the two calls. Bucketed by the real, Call-1-determined
-  // category rather than the authored scenario — a more accurate signal by
-  // this point, and the only one available anyway (reconciled results carry
-  // no _testMeta).
-  const reconciledChunks = distributeEvenlyByCategory(reconciled, numChunks, (r) => r.proposed_category);
-  const confidenceResultsByChunk = await Promise.all(
-    reconciledChunks.map((chunk, i) =>
-      withChunkRetry(
+  // Each chunk runs its own complete Call 1 -> Call 2 sequence independently
+  // and in parallel with every other chunk (2026-08-09) — a chunk's Call 2
+  // only ever needs that SAME chunk's own Call 1 results, never another
+  // chunk's, so there was never a real reason for chunk 1's Call 2 to wait
+  // on chunk 9's Call 1 the way the old structure's global "all of Call 1,
+  // then all of Call 2" barrier forced it to. Measured live before this
+  // change: every chunk's fully-usable result (evidence AND confidence)
+  // became available in a narrow ~15s window right at the end of the run,
+  // regardless of how much earlier that chunk's own Call 1 had actually
+  // finished (up to 50s+ before the slowest chunk's Call 1) — the barrier
+  // was erasing almost all of that head start. This is also the real
+  // prerequisite for ever showing a partial worklist while the rest streams
+  // in, which the barrier made pointless (nothing was ever really "done
+  // early" under it, only Call 1 was).
+  //
+  // The real trade-off, made deliberately: Call 2 used to be re-chunked
+  // AFTER Call 1, across every chunk's results at once, bucketed by each
+  // claim's REAL (Call-1-determined) category rather than the expected one
+  // — a more evenly balanced Call 2 workload than relying on Call 1's own
+  // up-front, expected-category grouping alone. That rebalancing needed
+  // every chunk's Call 1 result available simultaneously, which is exactly
+  // the barrier this removes, so it's gone: both calls now use Call 1's own
+  // grouping (distributeClaimsForAnalysis, already category-aware, just
+  // against the expected category rather than the confirmed one).
+  const chunkResults = await Promise.all(
+    claimChunks.map(async (chunk, i) => {
+      const analysisResults = await withChunkRetry(
+        () => runAnalysis(chunk, providerHistory, registry, provider),
+        `runPipeline: Call 1 chunk ${i + 1}/${numChunks}`,
+      );
+      const reconciledChunk = analysisResults.map((r) => {
+        const claim = byId.get(r.claim_id);
+        if (!claim) {
+          throw new Error(`runPipeline: Call 1 returned an unknown claim_id "${r.claim_id}"`);
+        }
+        return reconcileCategory(claim, r);
+      });
+      const confidenceResultsChunk = await withChunkRetry(
         () =>
           runConfidence(
-            chunk.map((r) => ({
+            reconciledChunk.map((r) => ({
               claim_id: r.claim_id,
               category: r.proposed_category,
               category_detail: r.category_detail,
@@ -254,10 +267,13 @@ export async function runPipeline(
             provider,
           ),
         `runPipeline: Call 2 chunk ${i + 1}/${numChunks}`,
-      ),
-    ),
+      );
+      return { reconciledChunk, confidenceResultsChunk };
+    }),
   );
-  const confidenceResults = confidenceResultsByChunk.flat();
+
+  const reconciled = chunkResults.flatMap((c) => c.reconciledChunk);
+  const confidenceResults = chunkResults.flatMap((c) => c.confidenceResultsChunk);
   const confidenceById = new Map(confidenceResults.map((r) => [r.claim_id, r]));
 
   return reconciled.map((r) => {

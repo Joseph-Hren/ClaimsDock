@@ -218,7 +218,8 @@ export default function ClaimsTable({
         <BulkActionBar count={selected.size} state={bulkBarState} onAction={onBulkAction} onCancel={() => onSelectedChange(new Set())} />
       )}
 
-      <div className={styles.tableScroll}>
+      <div className={styles.verticalScroll}>
+      <div className={styles.tableHScroll}>
       <table className={styles.table}>
         <thead>
           <tr className={styles.headerRow}>
@@ -318,6 +319,7 @@ export default function ClaimsTable({
           setPage(0);
         }}
       />
+      </div>
     </div>
   );
 }

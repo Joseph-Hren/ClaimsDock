@@ -6,6 +6,10 @@
      whatever doesn't fit at the narrow end regardless of this curve). */
   width: 30vw;
   min-width: 260px;
+  /* Caps growth on very large viewports (2026-08-11) — 30vw keeps scaling
+     usefully at normal sizes, but past ~2300px it starts eating more of the
+     screen than the panel actually needs. */
+  max-width: 690px;
   flex-shrink: 0;
   background: var(--bg-anchor);
   padding: 24px;
@@ -201,6 +205,9 @@
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  /* Clears the fixed footer once scrolled to the oldest exchange, same
+     reasoning as ClaimsTable's own .verticalScroll (2026-08-11). */
+  padding-bottom: var(--footer-space);
 }
 
 .exchange {

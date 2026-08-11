@@ -295,9 +295,9 @@ function AuditLogContent({ row, onAddNote }: { row: DashboardClaimRow; onAddNote
           <p className={styles.auditEntryBody}>{auditEntryBody(entry)}</p>
         </div>
       ))}
-      <button className={styles.addNoteButton} onClick={onAddNote}>
+      <Button kind="secondary" className={styles.addNoteButton} onClick={onAddNote}>
         + Add a note
-      </button>
+      </Button>
     </div>
   );
 }
@@ -427,6 +427,7 @@ export default function ClaimsCard({
 
       <SlidingToggle options={VIEW_OPTIONS} selected={view} onChange={(id) => setView(id as ViewId)} />
 
+      <div className={styles.scrollBody}>
       <div className={styles.divider} />
 
       <div className={styles.animatedHeight} style={{ height, transitionDuration: skipHeightTransition ? '0s' : undefined }}>
@@ -473,6 +474,7 @@ export default function ClaimsCard({
           </div>
         );
       })()}
+      </div>
     </div>
   );
 }

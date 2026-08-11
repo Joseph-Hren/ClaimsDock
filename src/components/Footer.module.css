@@ -1,0 +1,64 @@
+/* Always fixed to the bottom of the screen, same treatment as Masthead
+   (same background token, same muted icon-tint token for the logo/text) —
+   see tokens.css's --footer-height/--footer-gap/--footer-space for the
+   shared values every scrolling region reserves clearance for. */
+.footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: var(--footer-height);
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 0 24px;
+  background: var(--bg-header);
+  color: var(--masthead-icon);
+  font-size: 0.875rem;
+  /* Above everything, including the claim-card overlay (Modal's .layer, 30)
+     and the diagram overlay (100) — 2026-08-11, per explicit request: the
+     footer should always sit on top, never get covered by a card. Modal's
+     .layer already reserves --footer-space in its own max-height, so a card
+     was never supposed to extend into the footer's strip in the first place
+     — this only changes what wins in an edge case, not normal scrolling. */
+  z-index: 110;
+}
+
+.logo {
+  display: flex;
+  flex-shrink: 0;
+  opacity: 0.85;
+}
+
+.copyright {
+  opacity: 0.85;
+  white-space: nowrap;
+}
+
+.links {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-left: auto;
+}
+
+/* Shared by the two <a> links and the System Diagram <button> — one
+   consistent hover/focus treatment regardless of element type, per this
+   project's own interaction-consistency rule. */
+.link {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  opacity: 0.85;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+.link:hover,
+.link:focus-visible {
+  opacity: 1;
+  text-decoration: underline;
+}

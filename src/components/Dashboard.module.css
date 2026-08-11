@@ -32,14 +32,16 @@
 }
 
 .tableScroll {
-  /* Scrolls internally instead of the whole page, now that .page is a fixed
-     viewport height — kept as its own inner wrapper, separate from
-     .tableRegion itself, so the claim-card/overlay ModalLayer (positioned
-     absolute against .tableRegion, unchanged) stays anchored to the visible
-     viewport rather than scrolling away with the table's own content. */
+  /* A flex passthrough only now (2026-08-11) — the actual vertical scrolling
+     moved down into ClaimsTable's own .verticalScroll, so its listHeader and
+     bulk-action bar can stay fixed while just the table + pagination scroll.
+     Still its own wrapper, separate from .tableRegion itself, so the claim-
+     card/overlay ModalLayer (positioned absolute against .tableRegion,
+     unchanged) stays anchored to the visible viewport regardless. */
   flex: 1;
   min-height: 0;
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 .fullPageShadeWrap {

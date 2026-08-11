@@ -262,6 +262,18 @@
   --toggle-thumb-bg: var(--bg-page);
 }
 
+/* ---- Footer — one shared height/gap pair, not hardcoded per consumer. Every
+   internally-scrolling region (table, Anchor history, claim-card body) pads
+   its own bottom by --footer-space so its last real content clears the
+   fixed footer by --footer-gap once fully scrolled, rather than the footer
+   visually swallowing it. Bump --footer-height alone if the footer grows —
+   nothing else needs to change. ---- */
+:root {
+  --footer-height: 48px;
+  --footer-gap: 8px;
+  --footer-space: calc(var(--footer-height) + var(--footer-gap));
+}
+
 /* ---- Animation durations — shared defaults, per the interaction spec ---- */
 :root {
   --dur-fade-in: 0.24s;

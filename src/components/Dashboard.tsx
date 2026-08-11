@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import styles from './Dashboard.module.css';
 import Masthead from './Masthead';
+import Footer from './Footer';
 import LoadingToast from './LoadingToast';
 import StatTiles from './StatTiles';
 import ClaimsTable from './ClaimsTable';
@@ -483,6 +484,8 @@ export default function Dashboard({ rows, isComplete }: { rows: DashboardClaimRo
         </div>
       )}
       {diagramAnim.mounted && <WorkflowDiagramModal onClose={() => setDiagramOpen(false)} closing={diagramAnim.closing} />}
+
+      <Footer onOpenDiagram={() => setDiagramOpen(true)} />
     </div>
   );
 }

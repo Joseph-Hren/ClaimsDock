@@ -14,6 +14,36 @@
   left: 50%;
   transform: translateX(-50%);
   width: min(624px, calc(100% - 48px));
+  /* Bounded to .tableRegion's own height, not the viewport (2026-08-11) — a
+     tall claim card used to force the whole fixed-viewport page to scroll,
+     which visually "cut off" the table and Anchor panel (both sized to
+     exactly fill that same fixed viewport, never designed to be scrolled as
+     a block) rather than actually revealing more of them. 100vh was tried
+     first and was wrong: .layer's own `top: 40px` is relative to
+     .tableRegion, which itself starts well below the true viewport top
+     (under the masthead and StatTiles), so a 100vh-based max-height
+     measured from the wrong origin and let the card's bottom edge overshoot
+     into the footer's reserved strip by roughly that same offset. 100%
+     against .tableRegion's own real (flex-resolved) height — whose bottom
+     edge does coincide with the true viewport bottom — doesn't have that
+     mismatch. 40px mirrors the top offset for symmetry; the other 40px is
+     comfortable breathing room before the fixed footer's own reserved
+     space. ClaimsCard's own root handles the actual internal scrolling
+     within this bound. Bottom margin trimmed 40px -> 16px (2026-08-11,
+     confirmed live there was room to spare) — top offset unchanged. */
+  max-height: calc(100% - 40px - 16px - var(--footer-space));
+  overflow: hidden;
+  /* A flex container, not just a box with max-height — a percentage
+     max-height on the child (.card) has nothing definite to resolve
+     against otherwise (max-height alone doesn't count as a "definite
+     height" for that), so .card just rendered at its full natural size and
+     this max-height+overflow:hidden only ever hard-cropped it instead of
+     ever letting it become its own scroll container. As a flex container,
+     .card genuinely gets clamped to whatever height .layer actually ends up
+     at (auto up to the cap above), and can then correctly hand the leftover
+     space to its own scrolling child. */
+  display: flex;
+  flex-direction: column;
   animation: layer-in var(--dur-fade-in) var(--ease-standard);
 }
 .layer.closing {

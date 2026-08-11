@@ -4,8 +4,20 @@
   box-shadow:
     0 20px 50px rgba(0, 0, 0, 0.25),
     0 4px 12px rgba(0, 0, 0, 0.12);
-  padding: 24px;
   font-size: 0.875rem;
+  /* Fixed top (header/badges/basic info/toggle) + scrolling bottom
+     (2026-08-11) — .card is now the flex column, bounded by Modal's own
+     .layer max-height; .scrollBody below is the part that actually scrolls,
+     so a long claim card never has to grow the whole page to be readable. */
+  display: flex;
+  flex-direction: column;
+  /* min-height: 0, not max-height: 100% — .card is a flex item of Modal's
+     .layer now, so this is what actually lets it shrink to whatever height
+     .layer ends up at instead of forcing its own natural content height
+     regardless (flex items default to min-height: auto, which refuses to
+     shrink below content size unless overridden). */
+  min-height: 0;
+  padding: 24px 24px 0;
 }
 
 .headerRow {
@@ -77,6 +89,18 @@
   height: 1px;
   background: var(--border-divider);
   margin: 16px 0;
+}
+
+/* Everything from the divider just below the view toggle down through the
+   action buttons — the part that actually scrolls (2026-08-11), while
+   headerRow/badgeRow/infoGrid/the toggle above it stay in place. Restores
+   the bottom padding .card no longer carries, since this is now the part
+   that owns the card's real bottom edge. */
+.scrollBody {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 24px;
 }
 
 .animatedHeight {
@@ -209,11 +233,6 @@
 
 .addNoteButton {
   align-self: flex-start;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
-  padding: 8px 14px;
-  font-size: 0.8125rem;
-  font-weight: 600;
 }
 
 .actionRow {

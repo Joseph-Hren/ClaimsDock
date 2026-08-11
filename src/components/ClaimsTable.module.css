@@ -1,13 +1,33 @@
 .wrap {
-  padding: 20px 24px 24px;
+  /* No bottom padding here anymore — .verticalScroll below owns the bottom
+     edge now and pads it itself, since it's the thing that actually reaches
+     the fixed footer once scrolled to its end. */
+  padding: 20px 24px 0;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The vertical scroll boundary (2026-08-11) — only the table + pagination
+   scroll now; .listHeader and the bulk-action bar above stay fixed in
+   place, same as StatTiles already does above all of this. Padding-bottom
+   reserves --footer-space so the last table row or pagination control
+   clears the fixed footer, rather than disappearing behind it, once
+   scrolled all the way down. */
+.verticalScroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: calc(24px + var(--footer-space));
 }
 
 /* The real fix for the Anchor-panel/table overlap: once the table's natural
    content width (many nowrap columns) is wider than the space actually
    available, it scrolls within its own bounds instead of visually
    overflowing into whatever sits next to it. Scoped to just the table, not
-   .wrap, so the list header and pagination stay put above/below it. */
-.tableScroll {
+   .wrap, so the list header and bulk-action bar stay fixed regardless. */
+.tableHScroll {
   overflow-x: auto;
 }
 

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { Button } from '../components/Button';
 import styles from './error.module.css';
 
 // Next.js error boundary for the homepage — without this, an Evaluation
@@ -21,9 +22,9 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
         The Evaluation Pipeline didn&rsquo;t complete successfully. This can happen on a live model call — retrying usually
         resolves it.
       </p>
-      <button className={styles.retry} onClick={reset}>
+      <Button className={styles.retry} onClick={reset}>
         Try again
-      </button>
+      </Button>
     </div>
   );
 }

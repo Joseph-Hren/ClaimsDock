@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Lora, Karla, Outfit, IBM_Plex_Mono } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
 import './globals.css';
 
 const lora = Lora({ variable: '--font-lora', subsets: ['latin'] });
@@ -46,7 +47,10 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
       </head>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Analytics />
+      </body>
     </html>
   );
 }

@@ -162,20 +162,20 @@
   line-height: 1.5;
   color: var(--ink-primary);
   opacity: 0;
-  animation: factSlot 152s linear infinite;
+  animation: factSlot 160s linear infinite;
 }
 
 @keyframes factSlot {
   0% {
     opacity: 0;
   }
-  0.3289% {
+  0.3125% {
     opacity: 1;
   }
-  4.9342% {
+  4.6875% {
     opacity: 1;
   }
-  5.2632% {
+  5% {
     opacity: 0;
   }
   100% {

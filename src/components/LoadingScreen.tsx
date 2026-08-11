@@ -54,6 +54,7 @@ const FACTS: string[] = [
   'Anchor remembers your last question — ask a follow-up like "what about that one" and it knows what that means.',
   'Anchor can act on more than one claim at a time — ask it to draft a denial for several flagged claims at once.',
   "ClaimsDock's document search runs on locally-hosted embeddings — no claim data is sent to a third party just to answer a policy question.",
+  "Ask Anchor to select claims for you — \"select all claims suspected of fraud\" or \"select claims that need approval\" — and it checks them in the Claims List so you can act on them in bulk.",
 ];
 
 // Per-item spacing only — the shared keyframe's own percentages (and its
@@ -64,7 +65,7 @@ const FACTS: string[] = [
 // belongs — checked below, dev-only, since a silent drift here wouldn't
 // throw, it would just make the cycling look subtly wrong.
 const PER_SLOT_S = 8;
-const EXPECTED_TOTAL_S = 152;
+const EXPECTED_TOTAL_S = 160;
 
 if (process.env.NODE_ENV !== 'production' && FACTS.length * PER_SLOT_S !== EXPECTED_TOTAL_S) {
   throw new Error(

@@ -58,6 +58,7 @@ export default function AnchorPanel({
   claimInView,
   selectedClaimIds,
   onOpenCard,
+  onSelectClaims,
   provider,
 }: {
   providerNames: string[];
@@ -70,6 +71,12 @@ export default function AnchorPanel({
    *  after a multi-select, distinct from a single claim in view. */
   selectedClaimIds?: string[];
   onOpenCard?: (row: DashboardClaimRow) => void;
+  /** Called with the real (internal) claim_ids that should now be selected,
+   *  after resolving every select_claims/deselect_claims call in an
+   *  exchange in order (2026-08-11) — always the final, fully-resolved
+   *  selection, a single replace, never a separate add/remove callback (see
+   *  this prop's call site in ask() for why that split was the actual bug). */
+  onSelectClaims?: (claimIds: string[]) => void;
   /** Which model answers Anchor's questions — set via the Settings panel's
    *  toggle (Phase 13 Pass B), lifted to Dashboard.tsx and persisted there. */
   provider: ModelProvider;
@@ -170,13 +177,46 @@ export default function AnchorPanel({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? 'Anchor could not answer that.');
+      const toolCalls: AnchorToolCall[] = data.toolCalls ?? [];
       const exchange: AnchorExchange = {
         id: nextId.current++,
         question: trimmed,
         answer: data.answer,
-        toolCalls: data.toolCalls ?? [],
+        toolCalls,
       };
       setHistory((prev) => [exchange, ...prev]);
+      // select_claims's result is the exact same shape lookup_claim's own
+      // filtered results already are — extractCitedClaimIds already knows
+      // how to read matches[].claim_id out of it, so reused here rather than
+      // a second extraction path. The IDs in a call's own result are display
+      // numbers (never the real internal claim_id — project-spec.txt Section
+      // 7d); rows maps them back.
+      //
+      // Folded through every select_claims/deselect_claims call in this
+      // exchange, IN ORDER, into one final selection — not two independent
+      // callbacks/setState calls, one per call. That was the original
+      // design and it had a real bug, found live 2026-08-11: a combined
+      // "clear this selection and select claims that need approval" request
+      // correctly called both tools, but applying them as two separate
+      // setSelectedClaimIds updates meant deselect's own "clear everything"
+      // branch (a plain `() => new Set()`, ignoring prior state) always won
+      // outright regardless of which tool the model actually called first,
+      // silently discarding the select every time the two combined.
+      const selectionCalls = toolCalls.filter((c) => c.name === 'select_claims' || c.name === 'deselect_claims');
+      if (selectionCalls.length > 0 && onSelectClaims) {
+        let working = new Set(rows.filter((r) => selectedClaimIds?.includes(r.displayNumber)).map((r) => r.claim.claim_id));
+        for (const call of selectionCalls) {
+          const displayNumbers = extractCitedClaimIds([call]);
+          const realIds = rows.filter((r) => displayNumbers.includes(r.displayNumber)).map((r) => r.claim.claim_id);
+          if (call.name === 'select_claims') {
+            working = new Set(realIds);
+          } else {
+            const mode = (call.result as { mode?: string } | undefined)?.mode;
+            working = mode === 'cleared' ? new Set() : new Set([...working].filter((id) => !realIds.includes(id)));
+          }
+        }
+        onSelectClaims([...working]);
+      }
       setStatus('idle');
       setInput('');
       // Fresh suggestions after each real question — an explicit redraw

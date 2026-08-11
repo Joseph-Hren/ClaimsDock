@@ -36,6 +36,15 @@ import type { ModelProvider } from '../src/lib/pipeline/model-client';
 const providerArg = process.argv.find((a) => a.startsWith('--provider='));
 const ANCHOR_PROVIDER: ModelProvider = providerArg?.split('=')[1] === 'kimi' ? 'kimi' : 'anthropic';
 
+// --only=<substring> runs just the cases whose label contains it (case-
+// insensitive) — added 2026-08-11 so a targeted round of iteration on one
+// feature doesn't have to re-run the whole adversarial set (and re-pay for
+// it) every time. The one-time runPipeline() call to build the claim index
+// below still happens regardless — no way around that cost, but it's a
+// small fraction of what asking every case would cost.
+const onlyArg = process.argv.find((a) => a.startsWith('--only='));
+const ONLY_FILTER = onlyArg?.split('=')[1]?.toLowerCase();
+
 interface TestCase {
   label: string;
   /** Given a real internal claim_id, returns its display number — lets each
@@ -43,6 +52,20 @@ interface TestCase {
   question: (id: (claimId: string) => string) => string;
   /** A real internal claim_id, translated to its display number at call time. */
   claimInView?: string;
+  /** Real internal claim_ids, translated to display numbers at call time —
+   *  simulates a real prior checkbox selection (2026-08-11), for cases about
+   *  select_claims/deselect_claims referring to "these"/"them" rather than a
+   *  filter. Every prior case left this empty (no real selection existed),
+   *  which is exactly why the vague-reference failure mode this was added
+   *  for was never actually exercised until it broke live. */
+  selectedClaimIds?: string[];
+  /** A hardcoded prior Q/A pair (2026-08-11) — CASES are otherwise
+   *  independent, single-shot questions with no real conversation history,
+   *  which is exactly why the "own recent answer treated as already having
+   *  handled this new request" failure mode was never exercised until it
+   *  broke live: a real deselect immediately following an answer that had
+   *  itself just narrated a selection change. */
+  priorTurn?: { question: string; answer: string };
 }
 
 const CASES: TestCase[] = [
@@ -110,6 +133,63 @@ const CASES: TestCase[] = [
     question: (id) =>
       `Give me a deep analysis of claims ${id('FRD-PHANTOM-01')}, ${id('FRD-UNBUNDLE-01')}, ${id('FRD-SUBSTANDARD-01')}, ${id('FRD-DOUBLEBILL-01')}, and ${id('FRD-UPCODE-01')}.`,
   },
+  {
+    label: 'select_claims — happy path, explicit selection request',
+    question: () => 'Select all claims suspected of fraud.',
+  },
+  {
+    label: 'select_claims — must NOT fire for an ordinary lookup, only an explicit select request',
+    question: () => 'Show me all claims suspected of fraud.',
+  },
+  {
+    label: 'deselect_claims — clear the whole current selection, no filter',
+    question: () => 'Deselect all claims in the Claims List.',
+  },
+  {
+    label: 'deselect_claims — filtered, remove just a subset from the current selection',
+    question: () => 'Deselect just the fraud ones, but leave everything else selected.',
+  },
+  {
+    label: 'deselect_claims regression — vague reference to a real prior selection ("these") — must be a real tool call, not an echo of the context note',
+    question: () => 'Deselect these claims.',
+    selectedClaimIds: ['FRD-UPCODE-01', 'FRD-PHANTOM-01', 'FRD-UNBUNDLE-01', 'FRD-SUBSTANDARD-01', 'FRD-DOUBLEBILL-01'],
+  },
+  {
+    label: 'deselect_claims regression — "all", with a real prior selection in context',
+    question: () => 'Deselect all claims.',
+    selectedClaimIds: ['FRD-UPCODE-01', 'FRD-PHANTOM-01', 'FRD-UNBUNDLE-01', 'FRD-SUBSTANDARD-01', 'FRD-DOUBLEBILL-01'],
+  },
+  {
+    label: 'deselect_claims regression — positional slice the tool cannot express — must say so, never fabricate a result or claim IDs',
+    question: () => 'Deselect the second half of them.',
+    selectedClaimIds: ['FRD-UPCODE-01', 'FRD-PHANTOM-01', 'FRD-UNBUNDLE-01', 'FRD-SUBSTANDARD-01', 'FRD-DOUBLEBILL-01'],
+  },
+  {
+    label: 'deselect_claims regression — standalone deselect right after an answer that itself just narrated a selection change (the real live failure)',
+    question: () => 'Deselect all claims.',
+    // The CURRENT real selection this new request must act on — deliberately
+    // different from what the prior answer below describes, exactly like
+    // the live case (the prior exchange's own claims were already replaced
+    // by a new selection before this follow-up was asked).
+    selectedClaimIds: ['CLN-CMS-01', 'MIS-CMS-01', 'FRD-SUBSTANDARD-01'],
+    priorTurn: {
+      question: 'Deselect all currently selected claims, and select claims that need approval.',
+      answer:
+        'Done — cleared your previous selection of 17 claims, then selected 3 claims that need approval in the Claims List.',
+    },
+  },
+  {
+    label: 'select_claims regression — "need to be escalated" must map to recommended_action: Escalate, not the broad "still active" status fallback',
+    question: () => 'Select all claims that need to be escalated.',
+  },
+  {
+    label: 'select_claims regression — "need additional info" must map to recommended_action: Request Additional Info, not status: Additional Info Requested',
+    question: () => 'Select all claims that need additional info.',
+  },
+  {
+    label: 'select_claims regression — "need approval" must map to status: Needs Approval alone, not the broad "still active" fallback',
+    question: () => 'Select all claims that need approval.',
+  },
 ];
 
 async function main() {
@@ -118,21 +198,34 @@ async function main() {
   const claims = generateClaims();
   const providerHistory = getProviderHistory();
   const registry = buildClaimNumberRegistry(claims.map((c) => c.claim_id));
-  const results = await runPipeline();
+  // Always Kimi here, independent of --provider/ANCHOR_PROVIDER above
+  // (2026-08-11) — this call just builds throwaway claim data for the test
+  // to run against; it has nothing to do with which model actually answers
+  // Anchor's questions, and defaulting it to Anthropic (this function's own
+  // default) meant every single smoke:router run — even --provider=kimi
+  // ones — silently paid for a full, real, 18-call Claude Pipeline pass
+  // first, regardless of what was actually being tested. Matches the real
+  // app's own cost-driven default (cache.ts's PIPELINE_PROVIDER), which this
+  // script should have matched from the start.
+  const results = await runPipeline(new Date(), 'kimi');
   const index = buildClaimIndex(claims, results, registry);
   console.log(`Index built: ${index.size} claims.\n`);
+
+  const cases = ONLY_FILTER ? CASES.filter((c) => c.label.toLowerCase().includes(ONLY_FILTER)) : CASES;
+  if (ONLY_FILTER) console.log(`--only=${ONLY_FILTER}: running ${cases.length}/${CASES.length} cases.\n`);
   console.log('='.repeat(70));
 
-  for (const testCase of CASES) {
+  for (const testCase of cases) {
     const question = testCase.question((realId) => registry.toDisplay(realId));
     const claimInView = testCase.claimInView ? registry.toDisplay(testCase.claimInView) : undefined;
+    const selectedClaimIds = testCase.selectedClaimIds?.map((id) => registry.toDisplay(id));
 
     console.log(`\n── ${testCase.label} ──`);
-    console.log(`Q: "${question}"${claimInView ? ` (claim in view: ${claimInView})` : ''}`);
+    console.log(`Q: "${question}"${claimInView ? ` (claim in view: ${claimInView})` : ''}${selectedClaimIds ? ` (selected: ${selectedClaimIds.join(', ')})` : ''}`);
 
     const result = await askAnchor(
       question,
-      { index, providerHistory, now: new Date(), claimInView },
+      { index, providerHistory, now: new Date(), claimInView, selectedClaimIds, priorTurn: testCase.priorTurn },
       ANCHOR_PROVIDER,
     );
 
@@ -147,7 +240,7 @@ async function main() {
     console.log(`  answer: ${result.answer}`);
   }
 
-  console.log(`\n${'='.repeat(70)}\n${CASES.length} questions run.`);
+  console.log(`\n${'='.repeat(70)}\n${cases.length} questions run.`);
 }
 
 main().catch((err) => {

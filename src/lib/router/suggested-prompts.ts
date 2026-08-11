@@ -29,6 +29,8 @@ export const SUGGESTED_PROMPTS: SuggestedPrompt[] = [
   { text: `Show me claims from ${PROVIDER_TOKEN}.`, category: 'action', scope: 'general' },
   { text: 'Show me everything needing approval.', category: 'action', scope: 'general' },
   { text: 'Draft escalation notes for all claims recommended for escalation.', category: 'action', scope: 'general' },
+  { text: 'Select all claims suspected of fraud.', category: 'action', scope: 'general' },
+  { text: 'Select all claims that need approval.', category: 'action', scope: 'general' },
 
   // ---- regulatory deadlines (ERISA / prompt-pay) ----
   { text: 'What does ERISA require for pre-service claims?', category: 'regulatory', scope: 'general' },

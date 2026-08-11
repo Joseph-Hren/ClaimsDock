@@ -19,6 +19,28 @@ const SEVERITY_VALUES = ['Low', 'Moderate', 'High', 'Critical'] as const;
 const CATEGORY_VALUES = ['fraud', 'ambiguous', 'missing-data', 'complex-math', 'clean'] as const;
 const RECOMMENDED_ACTION_VALUES = ['Approve', 'Approve as calculated', 'Escalate', 'Deny', 'Request Additional Info'] as const;
 
+// Shared by lookup_claim and select_claims below — one filter shape, not two
+// hand-copied ones that could drift apart the way this file's own
+// KIMI_ROUTER_TOOLS comment already warns against for a different surface.
+const FILTER_SCHEMA = {
+  type: 'object',
+  description: 'A structured filter for a broad, multi-claim query. Any combination of fields may be used together.',
+  properties: {
+    status: {
+      description: 'One status, or an array of statuses (e.g. ["Submitted, flagged", "Needs Approval", "Escalated"] for "still active").',
+      anyOf: [{ type: 'string', enum: STATUS_VALUES }, { type: 'array', items: { type: 'string', enum: STATUS_VALUES } }],
+    },
+    severity: { type: 'string', enum: SEVERITY_VALUES },
+    category: { type: 'string', enum: CATEGORY_VALUES },
+    patient_name: { type: 'string', description: 'Substring match against the patient\'s name — a partial or misspelled name is fine, e.g. "Nakamura" or "Walter".' },
+    provider_name: { type: 'string', description: 'Substring match against the billing provider\'s name.' },
+    min_amount: { type: 'number', description: 'Only claims billed at or above this dollar amount, e.g. 10000 for "over $10,000."' },
+    max_amount: { type: 'number', description: 'Only claims billed at or below this dollar amount.' },
+    max_sla_percent_remaining: { type: 'number', description: 'Only claims with this percentage (0-100) or less of their SLA window remaining, e.g. 10 for "less than 10% of the SLA time remaining."' },
+    recommended_action: { type: 'string', enum: RECOMMENDED_ACTION_VALUES, description: 'Only claims whose recommended action exactly matches, e.g. "Deny."' },
+  },
+};
+
 export const ROUTER_TOOLS = [
   {
     name: 'lookup_claim',
@@ -28,24 +50,30 @@ export const ROUTER_TOOLS = [
       type: 'object' as const,
       properties: {
         claim_id: { type: 'string', description: 'A specific claim ID, e.g. "CLM-4821-039571". Omit if using filter instead.' },
-        filter: {
-          type: 'object',
-          description: 'A structured filter for a broad, multi-claim query. Omit if claim_id is provided. Any combination of fields may be used together.',
-          properties: {
-            status: {
-              description: 'One status, or an array of statuses (e.g. ["Submitted, flagged", "Needs Approval", "Escalated"] for "still active").',
-              anyOf: [{ type: 'string', enum: STATUS_VALUES }, { type: 'array', items: { type: 'string', enum: STATUS_VALUES } }],
-            },
-            severity: { type: 'string', enum: SEVERITY_VALUES },
-            category: { type: 'string', enum: CATEGORY_VALUES },
-            patient_name: { type: 'string', description: 'Substring match against the patient\'s name — a partial or misspelled name is fine, e.g. "Nakamura" or "Walter".' },
-            provider_name: { type: 'string', description: 'Substring match against the billing provider\'s name.' },
-            min_amount: { type: 'number', description: 'Only claims billed at or above this dollar amount, e.g. 10000 for "over $10,000."' },
-            max_amount: { type: 'number', description: 'Only claims billed at or below this dollar amount.' },
-            max_sla_percent_remaining: { type: 'number', description: 'Only claims with this percentage (0-100) or less of their SLA window remaining, e.g. 10 for "less than 10% of the SLA time remaining."' },
-            recommended_action: { type: 'string', enum: RECOMMENDED_ACTION_VALUES, description: 'Only claims whose recommended action exactly matches, e.g. "Deny."' },
-          },
-        },
+        filter: { ...FILTER_SCHEMA, description: `${FILTER_SCHEMA.description} Omit if claim_id is provided.` },
+      },
+    },
+  },
+  {
+    name: 'select_claims',
+    description:
+      'Select claims matching a filter (same filter shape as lookup_claim) in the Claims List, so the user can then perform a bulk action on them — e.g. "select all claims suspected of fraud" or "select the claims that need escalation." This actually changes what\'s checked in the Claims List; it never performs an action itself. Only call this for an explicit selection request or once the user has confirmed an offer to select — never as a side effect of an ordinary lookup_claim question.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        filter: FILTER_SCHEMA,
+      },
+      required: ['filter'],
+    },
+  },
+  {
+    name: 'deselect_claims',
+    description:
+      'Deselect claims in the Claims List. Omit filter to clear the entire current selection — use this for "deselect these," "clear the selection," or "deselect the group you just selected." Provide a filter (same shape as lookup_claim/select_claims) to remove only the matching claims from the current selection instead, leaving the rest selected.',
+    input_schema: {
+      type: 'object' as const,
+      properties: {
+        filter: FILTER_SCHEMA,
       },
     },
   },

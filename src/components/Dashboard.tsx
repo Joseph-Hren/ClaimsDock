@@ -470,6 +470,7 @@ export default function Dashboard({ rows, isComplete }: { rows: DashboardClaimRo
           claimInView={cardVisible ? activeRow?.displayNumber : undefined}
           selectedClaimIds={selectedRows.map((r) => r.displayNumber)}
           onOpenCard={openCard}
+          onSelectClaims={(ids) => setSelectedClaimIds(new Set(ids))}
           provider={provider}
         />
       </div>

@@ -3,8 +3,7 @@
 import styles from './Footer.module.css';
 import { ClaimsDockLogo } from './ChromeIcons';
 
-// TODO: real LinkedIn URL still needed — placeholder "#" until then.
-const LINKEDIN_URL = '#';
+const LINKEDIN_URL = 'https://www.linkedin.com/in/joseph-hren/';
 
 export default function Footer({ onOpenDiagram }: { onOpenDiagram: () => void }) {
   return (

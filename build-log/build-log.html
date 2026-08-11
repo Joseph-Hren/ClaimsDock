@@ -725,6 +725,16 @@
           </div>
         </li>
 
+        <li>
+          <div class="session">
+            <div class="session-head"><h3>Fixed table/card headers, viewport-safe claim cards, and a new footer</h3><span class="pill pill--done">Done</span></div>
+            <p class="session-summary">ClaimsTable.tsx · Modal.module.css · Footer.tsx — two real max-height bugs, not one</p>
+            <p>Three UI fixes. The Claims List title, search bar, and bulk-action bar now stay fixed above the table while only the table and pagination scroll beneath them — previously the whole block scrolled together as one unit. Claim card overlays are now bounded to the viewport and scroll internally instead of forcing the whole fixed-viewport page to scroll, which used to make the table and Anchor panel look cut off (both are sized to exactly fill that viewport and were never meant to scroll as a block). A card's basic info and view toggle now stay fixed at the top; everything below the divider under the toggle — tab content and the action buttons — scrolls within the card itself.</p>
+            <p>Getting the card's height bound right took two real, distinct fixes. First: a percentage <code>max-height</code> on the card had no definite parent height to resolve against, so it was silently ignored — <code>overflow: hidden</code> was just hard-cropping the card instead of ever letting it scroll. Fixed by making the modal layer a real flex container, which flexbox can correctly constrain without needing a percentage height at all. Second, live-tested right after: a <code>100vh</code>-based max-height measured from the wrong origin, since the layer's absolute positioning is relative to the table region, which itself starts well below the true viewport top (under the masthead and stat tiles) — switched to <code>100%</code> so it resolves against that region's own actual height instead, which does end at the real viewport bottom.</p>
+            <p>New: a fixed footer — ClaimsDock logo, copyright, links to the portfolio site, LinkedIn, and the system diagram — sized off one shared height/gap token pair in <code>tokens.css</code>, so every internally-scrolling region (table, Anchor history, claim-card body) reserves the same clearance above it without hardcoding the number three times. Also capped Anchor's panel at 690px on very large viewports, where 30% of the screen was more than the panel needed.</p>
+          </div>
+        </li>
+
       </ol>
     </div>
   </section>
@@ -795,7 +805,7 @@
   <div class="col">
     <p>Living document — updated alongside the build, not after it.</p>
     <p>Source: <a href="https://github.com/Joseph-Hren/ClaimsDock">github.com/Joseph-Hren/ClaimsDock</a></p>
-    <p>Prototype built with Claude Code · this page last updated August 10, 2026.</p>
+    <p>Prototype built with Claude Code · this page last updated August 11, 2026.</p>
   </div>
   </div>
 </footer>

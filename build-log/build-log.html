@@ -748,6 +748,15 @@
           </div>
         </li>
 
+        <li>
+          <div class="session">
+            <div class="session-head"><h3>Bulk Approve/Escalate were skipping the note overlay entirely</h3><span class="pill pill--done">Done</span></div>
+            <p class="session-summary">bulk-actions.ts — a real production bug, found live by a real user</p>
+            <p>Found live in production: bulk Approve and bulk Escalate committed instantly across every selected claim, with no per-claim overlay at all — no chance to add the same optional audit-log note a single-claim action, or bulk Request Additional Info, already offered. The instant-commit path was a deliberate design from earlier in the build (skip the confirm screen since a bulk button only ever appears when every selected claim already agrees on the same recommendation), but it went further than intended and skipped the note-entry step too, not just the grace-window countdown.</p>
+            <p>The fix was small because the right mechanism already existed: Reverse and Request Additional Info already ran through a sequential queue that opens each claim's own existing overlay in turn, commits immediately with no grace window, and advances straight to the next claim. Approve and Escalate simply weren't routed through it. Rerouting them was the entire fix — no new overlay UI needed, since <code>ActionConfirmOverlay</code> already had full note-entry support for both action types from the single-claim flow, just never reachable from the bulk path.</p>
+          </div>
+        </li>
+
       </ol>
     </div>
   </section>
@@ -818,7 +827,7 @@
   <div class="col">
     <p>Living document — updated alongside the build, not after it.</p>
     <p>Source: <a href="https://github.com/Joseph-Hren/ClaimsDock">github.com/Joseph-Hren/ClaimsDock</a></p>
-    <p>Prototype built with Claude Code · this page last updated August 11, 2026.</p>
+    <p>Prototype built with Claude Code · this page last updated August 14, 2026.</p>
   </div>
   </div>
 </footer>

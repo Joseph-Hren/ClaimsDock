@@ -48,16 +48,20 @@ function bucketForRow(row: DashboardClaimRow): RowBucket {
   return { kind: bucket };
 }
 
-// One queued step — the sequential, note-required actions (Request
+// One queued step — the sequential actions (Approve, Escalate, Request
 // Additional Info, any Reverse) resolve to a list of these; Dashboard opens
-// each claim's own existing overlay in turn via its normal modal machinery.
+// each claim's own existing overlay in turn via its normal modal machinery,
+// which is what actually gives the adjuster a chance to add an optional
+// note before each one commits. Approve/Escalate moved into this queue
+// 2026-08-14 — they used to be 'instant' (see below), which skipped that
+// overlay/note step entirely; found live as a real bug, not a preference.
 export interface QueueStep {
   claimId: string;
-  action: 'request_additional_info' | UndoAction;
+  action: 'approve' | 'escalate' | 'request_additional_info' | UndoAction;
 }
 
 export type BulkBarState =
-  | { kind: 'instant'; label: string; action: 'approve' | 'escalate' | 'undo_recoupment' }
+  | { kind: 'instant'; label: string; action: 'undo_recoupment' }
   | { kind: 'queue'; label: string; steps: QueueStep[] }
   | { kind: 'none'; message: string };
 
@@ -84,8 +88,20 @@ export function computeBulkBarState(rows: DashboardClaimRow[]): BulkBarState {
   }
 
   const only = buckets[0];
-  if (only.kind === 'approve') return { kind: 'instant', label: `Approve ${n} claim${n === 1 ? '' : 's'}`, action: 'approve' };
-  if (only.kind === 'escalate') return { kind: 'instant', label: `Escalate ${n} claim${n === 1 ? '' : 's'}`, action: 'escalate' };
+  if (only.kind === 'approve') {
+    return {
+      kind: 'queue',
+      label: `Approve ${n} claim${n === 1 ? '' : 's'}`,
+      steps: rows.map((r) => ({ claimId: r.claim.claim_id, action: 'approve' as const })),
+    };
+  }
+  if (only.kind === 'escalate') {
+    return {
+      kind: 'queue',
+      label: `Escalate ${n} claim${n === 1 ? '' : 's'}`,
+      steps: rows.map((r) => ({ claimId: r.claim.claim_id, action: 'escalate' as const })),
+    };
+  }
   if (only.kind === 'cancel_recoupment') {
     return { kind: 'instant', label: `Cancel recoupment request for ${n} claim${n === 1 ? '' : 's'}`, action: 'undo_recoupment' };
   }

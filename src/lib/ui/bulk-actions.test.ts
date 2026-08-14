@@ -15,20 +15,25 @@ describe('computeBulkBarState', () => {
     expect(computeBulkBarState([]).kind).toBe('none');
   });
 
-  it('shows Approve when every selected claim is recommended Approve', () => {
+  it('queues Approve for every selected claim, one step per claim — not instant, so each gets a chance for an optional note', () => {
     const rows = [fixtureRow('a', 'Submitted, no flags', 'Approve'), fixtureRow('b', 'Needs Approval', 'Approve as calculated')];
     const state = computeBulkBarState(rows);
-    expect(state.kind).toBe('instant');
-    expect(state.kind === 'instant' && state.action).toBe('approve');
-    expect(state.kind === 'instant' && state.label).toBe('Approve 2 claims');
+    expect(state.kind).toBe('queue');
+    if (state.kind !== 'queue') return;
+    expect(state.label).toBe('Approve 2 claims');
+    expect(state.steps).toEqual([
+      { claimId: 'a', action: 'approve' },
+      { claimId: 'b', action: 'approve' },
+    ]);
   });
 
-  it('shows Escalate when every selected claim is recommended Escalate', () => {
+  it('queues Escalate for every selected claim, one step per claim', () => {
     const rows = [fixtureRow('a', 'Submitted, flagged', 'Escalate')];
     const state = computeBulkBarState(rows);
-    expect(state.kind).toBe('instant');
-    expect(state.kind === 'instant' && state.action).toBe('escalate');
-    expect(state.kind === 'instant' && state.label).toBe('Escalate 1 claim');
+    expect(state.kind).toBe('queue');
+    if (state.kind !== 'queue') return;
+    expect(state.label).toBe('Escalate 1 claim');
+    expect(state.steps).toEqual([{ claimId: 'a', action: 'escalate' }]);
   });
 
   it('queues Request Additional Info for every selected claim, one step per claim', () => {

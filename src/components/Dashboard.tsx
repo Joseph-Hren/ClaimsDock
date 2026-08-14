@@ -16,7 +16,7 @@ import AnchorPanel from './AnchorPanel';
 import { useExitAnimation } from './useExitAnimation';
 import { getCurrentClaimState } from '../lib/persistence/claim-state';
 import { appendAuditEntry, getAuditLogForClaim } from '../lib/persistence/local-store';
-import { submitHumanAction, submitPostTerminalAction } from '../lib/humangate/actions';
+import { submitPostTerminalAction } from '../lib/humangate/actions';
 import { computeBulkBarState, type QueueStep } from '../lib/ui/bulk-actions';
 import type { DashboardClaimRow } from '../lib/ui/dashboard-rows';
 import type { ModelProvider } from '../lib/pipeline/model-client';
@@ -246,20 +246,17 @@ export default function Dashboard({ rows, isComplete }: { rows: DashboardClaimRo
   );
   const bulkBarState = useMemo(() => computeBulkBarState(selectedRows), [selectedRows]);
 
-  // Approve/Escalate/Cancel-Recoupment-Request commit immediately per claim
-  // — no grace window, no stacked countdowns. Safe to do instantly (unlike
-  // a single-claim action) because the bulk bar only ever offers one of
-  // these when every selected claim already agrees on that exact
-  // recommendation/status — a mismatch is structurally impossible here.
-  function runInstantBulkAction(action: 'approve' | 'escalate' | 'undo_recoupment') {
+  // Cancel-Recoupment-Request is the only bulk action left that commits
+  // instantly, no grace window — Approve/Escalate moved to the sequential
+  // queue 2026-08-14 (see bulk-actions.ts), since skipping their overlay
+  // entirely also skipped the adjuster's chance to add an optional note,
+  // which was a real bug, not a deliberate simplification.
+  function runInstantBulkAction(action: 'undo_recoupment') {
     for (const row of selectedRows) {
-      const result =
-        action === 'undo_recoupment'
-          ? submitPostTerminalAction(row.claim, row.result, getAuditLogForClaim(row.claim.claim_id), {
-              claimId: row.claim.claim_id,
-              action: 'undo_recoupment',
-            })
-          : submitHumanAction(row.claim, row.result, { claimId: row.claim.claim_id, action });
+      const result = submitPostTerminalAction(row.claim, row.result, getAuditLogForClaim(row.claim.claim_id), {
+        claimId: row.claim.claim_id,
+        action,
+      });
       appendAuditEntry(result.auditEntry);
     }
     setRefreshKey((k) => k + 1);
